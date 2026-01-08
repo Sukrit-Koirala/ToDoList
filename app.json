@@ -1,5 +1,6 @@
 {
   "expo": {
+    "scheme": "todolist",
     "name": "ToDoList",
     "slug": "ToDoList",
     "version": "1.0.0",
@@ -21,10 +22,14 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.ToDoList"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }
