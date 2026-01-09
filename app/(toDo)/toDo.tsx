@@ -1,11 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
 import React from 'react';
-
+import ToDoScreen from '../../components/ToDoComps/ToDoScreen';
 const toDo = () => {
   return (
-    <View>
-      <Text>toDo</Text>
-    </View>
+    <ToDoScreen />
   )
 }
 

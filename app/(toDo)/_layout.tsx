@@ -1,9 +1,12 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { ToDoProvider } from '../../contexts/ToDoContext/ToDoProvider';
+
 
 export default function RootLayout() {
   return (
-    <Tabs
+    <ToDoProvider>
+      <Tabs
       screenOptions={{
         tabBarActiveTintColor: '#6C5CE7',
         tabBarInactiveTintColor: 'gray',
@@ -54,5 +57,6 @@ export default function RootLayout() {
         }}
       />
     </Tabs>
+    </ToDoProvider>
   );
 }

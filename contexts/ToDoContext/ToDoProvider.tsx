@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, Children } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Group, Todo } from '../../components/ToDoComps/ToDoHeader/ToDoHeader.types';
 import { ToDoContextType } from './ToDoProvider.types';
@@ -19,8 +19,6 @@ export const ToDoProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
     const currentGroup = currentGroupId ? findGroupById(groups, currentGroupId) || null : null;
-
-
     //Runs once when the component mounts
     useEffect(() => {
         const initializeData = async () => {
@@ -78,4 +76,13 @@ export const ToDoProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }
 
   return <ToDoContext.Provider value={value}>{children}</ToDoContext.Provider>;
+};
+
+
+export const useToDo = () => {
+  const context = useContext(ToDoContext);
+  if (!context) {
+    throw new Error('useToDo must be used within a ToDoProvider');
+  }
+  return context;
 };
