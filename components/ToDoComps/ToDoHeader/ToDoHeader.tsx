@@ -2,6 +2,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useState } from 'react'
 import { useToDo } from '../../../contexts/ToDoContext/ToDoProvider'
 import {styles} from './ToDoHeader.styles'
+import SelectGroupModal from '../SelectGroupModal/SelectGroupModal'
 const ToDoHeader = () => {
     const {currentGroup,groups,setCurrentGroup} = useToDo();
     const [modalVisible, setModalVisible] = useState(false);
@@ -22,6 +23,15 @@ const ToDoHeader = () => {
           <Text style={styles.arrow}>▼</Text>
         </TouchableOpacity>
     </View>
+
+    <SelectGroupModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        groups={groups}
+        currentGroupId={currentGroup?.id || "DailyTaks"}
+        onSelectGroup={handleGroupSelect}
+      />
+
     </>
   )
 }
