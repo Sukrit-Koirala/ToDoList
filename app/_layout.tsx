@@ -9,6 +9,7 @@ export default function RootLayout() {
     FreckleFace: require('../assets/fonts/FreckleFace.ttf'), // rename file if needed
     PlayFair: require('../assets/fonts/PlayFair.ttf'),
     PlayFairBold: require('../assets/fonts/PlayFair-Bold.ttf'),
+    PlayFairBoldExtra: require('../assets/fonts/PlayFair-Bold-Extra.ttf'),
   });
 
   if (!fontsLoaded) {

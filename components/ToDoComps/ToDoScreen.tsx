@@ -1,9 +1,10 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import React from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import RoundedRectangle from '../CustomUI/RoundedRectangle/RoundedRectangle';
 import CardDisplay from '../CustomUI/CardsDisplay/CardsDisplay';
 import Line from '../CustomUI/Line/Line';
+import TaskCard from '../CustomUI/TaskCards/TaskCard';
 
 const ToDoScreen = () => {
   return (
@@ -26,21 +27,41 @@ const ToDoScreen = () => {
         </View>
       </View>
 
-      {/* BOARDS TITLE */}
+      {/* BOARDS */}
       <Text style={styles.boardsText}>Boards</Text>
       <Text style={styles.viewAllText}>View All</Text>
-
-      {/* CARDS */}
       <View style={styles.cardsWrapper}>
         <CardDisplay cardCount={8} />
       </View>
 
-      <Line width={'96%'} style={{ alignSelf: 'center' }} thickness={1} />
+      <Line 
+        width={'96%'} 
+        style={{ alignSelf: 'center', marginTop:8 }} 
+        thickness={1} 
+      />
 
-            {/* BOARDS TITLE */}
-      <Text style={styles.DailyTasks}>Daily Tasks</Text>
-      <Text style={styles.viewAllTasksText}>View All</Text>
+      {/* DAILY TASKS SECTION WRAPPER */}
+      <View style={styles.dailyTasksSection}>
+        <Text style={styles.DailyTasks}>Daily Tasks</Text>
+        <Text style={styles.viewAllTasksText}>View All</Text>
 
+        {/* VERTICAL SCROLL for TaskCards */}
+        <View style={styles.tasksWrapper}>
+          <ScrollView
+            showsVerticalScrollIndicator={true}
+            contentContainerStyle={styles.tasksScrollContainer}
+            // style={{ backgroundColor: '#ffcc00' }}
+          >
+            <TaskCard text='Drink Water' radius={4}/>
+            <TaskCard text='Take a Break' radius={4}/>
+            <TaskCard text='Read a Book' radius={4}/>
+            <TaskCard text='Meditate' radius={4}/>
+            <TaskCard text='Exercise' radius={4}/>
+            <TaskCard text='Write Journal' radius={4}/>
+
+          </ScrollView>
+        </View>
+      </View>
     </LinearGradient>
   );
 };
@@ -56,12 +77,12 @@ const styles = StyleSheet.create({
   headerWrapper: {
     width: '80%',
     height: 87,
-    marginTop: 80, // only affects header
+    marginTop: 80,
     top: 10,
-
-    alignSelf: 'center', // keep it horizontally centered
+    alignSelf: 'center',
     marginLeft: -32,
   },
+
   headerContent: {
     paddingLeft: 16,
     flex: 1,
@@ -81,48 +102,60 @@ const styles = StyleSheet.create({
 
   /* BOARDS TITLE */
   boardsText: {
-    marginTop: 48, // same visual spacing as before
-    marginLeft: 32, // same as before
+    marginTop: 48,
+    marginLeft: 32,
     color: 'white',
     fontSize: 32,
-    fontFamily: 'PlayFair',
-
+    fontFamily: 'PlayFair-Bold-Extra',
   },
 
+  viewAllText: {
+    marginRight: 8,
+    color: 'white',
+    fontSize: 16,
+    fontFamily: 'PlayFair',
+    fontWeight: 'normal',
+    alignSelf: 'flex-end',
+    marginTop: -24,
+  },
+  cardsWrapper: {
+    marginTop: 8,
+    flex: 0.4,
+    backgroundColor: 'transparent',
+    paddingRight: 0,
+    paddingLeft: 0,
+    marginBottom: 32,
+  },
+
+  /* DAILY TASKS */
+  dailyTasksSection: {
+    marginTop: 8,
+    flex: 0.9, // allow vertical scroll to expand within this space
+  },
   DailyTasks: {
-    marginTop: 16, // same visual spacing as before
-    marginLeft: 32, // same as before
+    marginLeft: 32,
     color: '#101010',
     fontSize: 24,
     fontFamily: 'PlayFair',
   },
-
   viewAllTasksText: {
-    marginRight: 8, // same as before
+    marginRight: 8,
     color: '#101010',
     fontSize: 16,
     fontFamily: 'PlayFair',
     fontWeight: 'normal',
     alignSelf: 'flex-end',
-    marginTop: -24, // position it closer to "Boards" text
+    marginTop: -24,
   },
 
-  viewAllText: {
-    marginRight: 8, // same as before
-    color: 'white',
-    fontSize: 16,
-    fontFamily: 'PlayFair',
-    fontWeight: 'normal',
-    alignSelf: 'flex-end',
-    marginTop: -24, // position it closer to "Boards" text
+  /* VERTICAL SCROLL WRAPPER */
+  tasksWrapper: {
+    marginTop: 8,
+    flex: 0.95, // take available vertical space
   },
-
-  /* CARDS */
-  cardsWrapper: {
-    marginTop: 8, // spacing below "Boards" text
-    flex: 0.4, // same as original
-    backgroundColor: 'transparent',
-    paddingRight: 0, // remove right padding for edge-to-edge cards
-    paddingLeft: 0, // remove left padding for edge-to-edge cards
+  tasksScrollContainer: {
+    paddingHorizontal: 32,
+    paddingVertical: 16,
   },
+  
 });

@@ -11,7 +11,7 @@ type RoundedRectangleProps = {
 const RoundedRectangle: React.FC<RoundedRectangleProps> = ({
   children,
   backgroundColor = '#6C5CE7',
-  radius = 16,
+  radius = 4,
   style,
 }) => {
   return (
