@@ -8,7 +8,7 @@ export default function RootLayout() {
     <ToDoProvider>
       <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#6C5CE7',
+        tabBarActiveTintColor: '#101010',
         tabBarInactiveTintColor: 'gray',
       }}
     >
@@ -41,6 +41,37 @@ export default function RootLayout() {
           ),
         }}
       />
+
+      <Tabs.Screen
+        name="add"
+        options={{
+          title: 'Add Task',
+          headerShown: false,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'add-circle' : 'add-circle-outline'}
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+      
+      <Tabs.Screen
+        name="bookmarks"
+        options={{
+          title: 'Bookmarks',
+          headerShown: false,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'bookmark' : 'bookmark-outline'}
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+
 
       <Tabs.Screen
         name="profile"
