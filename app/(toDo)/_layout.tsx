@@ -1,15 +1,23 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ToDoProvider } from '../../contexts/ToDoContext/ToDoProvider';
+import AddTabButton from '../../components/CustomUI/AddTabButton/AddTabButton';
 
 
 export default function RootLayout() {
   return (
     <ToDoProvider>
-      <Tabs
+    <Tabs
       screenOptions={{
         tabBarActiveTintColor: '#101010',
         tabBarInactiveTintColor: 'gray',
+        tabBarStyle: {
+          height: 78,
+          overflow: 'visible', // 👈 REQUIRED
+        },
+        tabBarItemStyle: {
+          overflow: 'visible', // 👈 REQUIRED
+        },
       }}
     >
       <Tabs.Screen
@@ -42,20 +50,18 @@ export default function RootLayout() {
         }}
       />
 
-      <Tabs.Screen
-        name="add"
-        options={{
-          title: 'Add Task',
-          headerShown: false,
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? 'add-circle' : 'add-circle-outline'}
-              size={size}
-              color={color}
-            />
-          ),
-        }}
-      />
+    <Tabs.Screen
+      name="add"
+      options={{
+        headerShown: false,
+        tabBarLabel: () => null,
+        tabBarButton: (props) => (
+          <AddTabButton {...props} />
+        ),
+      }}
+    />
+
+
       
       <Tabs.Screen
         name="bookmarks"
