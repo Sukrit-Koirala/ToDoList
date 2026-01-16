@@ -11,8 +11,12 @@ const CalanderPage = () => {
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 0.56 }}
             style={styles.container}
-          >
+          > 
+
+
+
             <View style={styles.headerContainer}> 
+                <Text style={styles.monthText}>January</Text>
                 <CalanderHeader />
             </View>
 
@@ -31,9 +35,19 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     flex: 0.25,
-
+      position: 'relative',
   },
   timeBlockContainer: {
     flex: 0.75,
   },
+  monthText: {
+    position: 'absolute',
+    top: "24%",           // adjust as needed
+    left: 23,
+    zIndex: 10,
+    fontSize: 26,
+    color: '#fff',
+    fontFamily:'PlayFairBoldExtra'
+  }
+
 })

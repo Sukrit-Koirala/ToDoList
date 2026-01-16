@@ -32,7 +32,7 @@ const RoundedRectangle: React.FC<RoundedRectangleProps> = ({
 
 const styles = StyleSheet.create({
   base: {
-    overflow: 'hidden',
+    overflow: 'visible',
   },
 });
 

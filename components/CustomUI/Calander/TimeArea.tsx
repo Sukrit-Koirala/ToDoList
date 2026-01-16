@@ -12,9 +12,9 @@ const HOURS = [
 ]
 
 const tasks = [
-  { title: 'Meeting', startHour: 1, startMinute: 0, durationMinutes: 60, description: 'Team sync' },
-  // { title: 'Workout', startHour: 2, startMinute: 30, durationMinutes: 60 },
-  // { title: 'Project', startHour: 3, startMinute: 0, durationMinutes: 120 },
+  { title: 'Meeting', startHour: 1, startMinute: 0, durationMinutes: 60,description:"Team sync-up",active:true },
+  { title: 'Workout', startHour: 2, startMinute: 30, durationMinutes: 30 },
+  { title: 'Dinner', startHour: 4, startMinute: 0, durationMinutes: 15 },
 ]
 
 const TimeCard = () => {
@@ -42,4 +42,7 @@ const styles = StyleSheet.create({
     paddingVertical: 32,
     position: 'relative', // needed for absolute TaskCard
   },
+  card:{
+    marginRight: 8,
+  }
 })
