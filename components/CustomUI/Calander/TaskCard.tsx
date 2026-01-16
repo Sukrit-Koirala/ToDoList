@@ -1,12 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 import RoundedRectangle from '../RoundedRectangle/RoundedRectangle'
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from 'react-native-reanimated'
-import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import { Ionicons } from '@expo/vector-icons'
 
 /* ---------- Types ---------- */
@@ -49,7 +43,7 @@ const VARIANT_CONFIG = {
     paddingLeft: 2,
     titleSize: 14,
     rectBorder: 8,
-    cardRoundness: 6
+    cardRoundness: 6,
   },
   medium: {
     iconSize: 20,
@@ -58,7 +52,7 @@ const VARIANT_CONFIG = {
     paddingLeft: 4,
     titleSize: 14,
     rectBorder: 16,
-    cardRoundness: 12
+    cardRoundness: 12,
   },
   full: {
     iconSize: 32,
@@ -67,7 +61,7 @@ const VARIANT_CONFIG = {
     paddingLeft: 8,
     titleSize: 16,
     rectBorder: 32,
-    cardRoundness: 20
+    cardRoundness: 20,
   },
 } as const
 
@@ -95,98 +89,87 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const variant = getVariant(durationMinutes)
   const config = VARIANT_CONFIG[variant]
 
-  /* ----- Positioning ----- */
-  const initialTop = ((startHour * 60 + startMinute) / 60) * SLOT_HEIGHT
-  const top = useSharedValue(initialTop)
-  const startTop = useSharedValue(initialTop)
-  const cardHeight = (durationMinutes / 60) * SLOT_HEIGHT
-  const MIN_TOP = 0
-  const MAX_TOP = 24 * SLOT_HEIGHT - cardHeight
+  /* ----- Positioning (static) ----- */
+  const top =
+    ((startHour * 60 + startMinute) / 60) * SLOT_HEIGHT
 
-  /* ----- Gesture ----- */
-  const animatedStyle = useAnimatedStyle(() => ({
-    position: 'absolute',
-    left: 70,
-    right: 16,
-    top: top.value,
-  }))
+  const cardHeight =
+    (durationMinutes / 60) * SLOT_HEIGHT
 
-  const dragGesture = Gesture.Pan()
-    .onStart(() => {
-      startTop.value = top.value
-    })
-    .onUpdate((event) => {
-      const nextTop = startTop.value + event.translationY
-      top.value = Math.min(Math.max(nextTop, MIN_TOP), MAX_TOP)
-    })
-    .onEnd(() => {
-      const SNAP_HEIGHT = SLOT_HEIGHT / 4
-      top.value = withSpring(
-        Math.round(top.value / SNAP_HEIGHT) * SNAP_HEIGHT,
-        { damping: 15, stiffness: 120 }
-      )
-    })
-
-  /* ----- Icon ----- */
   const iconName = getIconForTitle(title)
 
-  /* ----- Render ----- */
   return (
-    <GestureDetector gesture={dragGesture}>
-      <Animated.View style={[animatedStyle, { height: cardHeight, marginLeft: 8,width:'77%' }]}>
-        <View style={[styles.shadowWrapper, active && styles.activeShadow]}>
-          <RoundedRectangle radius={config.cardRoundness} backgroundColor="#ffffff">
-            <View style={styles.row}>
-              {/* Icon always shows */}
-              <View
-                style={[
-                  styles.iconContainer,
-                  {
-                    width: config.iconBox,
-                    height: config.iconBox,
-                    borderRadius: config.rectBorder
-                  },
-                ]}
-              >
-                <Ionicons
-                  name={iconName}
-                  size={config.iconSize}
-                  color="#ffffff"
-                />
-              </View>
-
-              {/* Text */}
-              <View
-                style={[
-                  styles.textContainer,
-                  { paddingLeft: config.paddingLeft },
-                ]}
-              >
-                <Text
-                  style={[styles.title, { fontSize: config.titleSize }]}
-                  numberOfLines={1}
-                >
-                  {title}
-                </Text>
-
-                {config.showDescription && description && (
-                  <Text style={styles.description} numberOfLines={2}>
-                    {description}
-                  </Text>
-                )}
-              </View>
+    <View
+      style={[
+        styles.cardWrapper,
+        {
+          top,
+          height: cardHeight,
+        },
+      ]}
+    >
+      <View style={[styles.shadowWrapper, active && styles.activeShadow]}>
+        <RoundedRectangle
+          radius={config.cardRoundness}
+          backgroundColor="#ffffff"
+        >
+          <View style={styles.row}>
+            {/* Icon */}
+            <View
+              style={[
+                styles.iconContainer,
+                {
+                  width: config.iconBox,
+                  height: config.iconBox,
+                  borderRadius: config.rectBorder,
+                },
+              ]}
+            >
+              <Ionicons
+                name={iconName}
+                size={config.iconSize}
+                color="#ffffff"
+              />
             </View>
-          </RoundedRectangle>
-        </View>
-      </Animated.View>
-    </GestureDetector>
+
+            {/* Text */}
+            <View
+              style={[
+                styles.textContainer,
+                { paddingLeft: config.paddingLeft },
+              ]}
+            >
+              <Text
+                style={[styles.title, { fontSize: config.titleSize }]}
+                numberOfLines={1}
+              >
+                {title}
+              </Text>
+
+              {config.showDescription && description && (
+                <Text style={styles.description} numberOfLines={2}>
+                  {description}
+                </Text>
+              )}
+            </View>
+          </View>
+        </RoundedRectangle>
+      </View>
+    </View>
   )
 }
 
 export default TaskCard
 
-/* ---------- Styles ---------- */
 const styles = StyleSheet.create({
+  cardWrapper: {
+    position: 'absolute',
+    left: 70,
+    right: 16,
+    marginLeft: 8,
+    width: '77%',
+  },
+
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -212,7 +195,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     marginRight: 12,
     backgroundColor: '#101010',
-    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },

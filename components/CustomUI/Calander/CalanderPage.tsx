@@ -3,6 +3,7 @@ import React from 'react'
 import TimeCard from './TimeArea'
 import { LinearGradient } from 'expo-linear-gradient'
 import CalanderHeader from './Header/CalanderHeader'
+import CalendarFAB from './Header/FAB_Calander'
 
 const CalanderPage = () => {
   return (
@@ -16,7 +17,16 @@ const CalanderPage = () => {
 
 
             <View style={styles.headerContainer}> 
-                <Text style={styles.monthText}>January</Text>
+                <View style={styles.monthRow}>
+                  <Text style={styles.monthText}>January</Text>
+
+                  <CalendarFAB
+                    onPress={() => {
+                      console.log('Add event')
+                    }}
+                    style={{ marginLeft: 12 }}
+                  />
+                </View>
                 <CalanderHeader />
             </View>
 
@@ -40,14 +50,20 @@ const styles = StyleSheet.create({
   timeBlockContainer: {
     flex: 0.75,
   },
-  monthText: {
-    position: 'absolute',
-    top: "24%",           // adjust as needed
+  monthText: {          // adjust as needed
     left: 23,
     zIndex: 10,
     fontSize: 26,
     color: '#fff',
     fontFamily:'PlayFairBoldExtra'
-  }
-
+  },
+  monthRow: {
+  position: 'absolute',
+  top: '28%',
+  width:"100%",
+  flexDirection: 'row',
+  alignItems: 'center',
+  zIndex: 10,
+  // backgroundColor: '#368924'
+},
 })
