@@ -2,11 +2,40 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import React from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import RoundedRectangle from '../CustomUI/RoundedRectangle/RoundedRectangle';
-import CardDisplay from '../CustomUI/CardsDisplay/CardsDisplay';
 import Line from '../CustomUI/Line/Line';
 import TaskCard from '../CustomUI/TaskCards/TaskCard';
 
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { getGroups,addGroup } from '../../api/groups';
+import CardContainer from '../CustomUI/CardsDisplay/CardsDisplay';
+import { getTodos } from '../../api/todos';
+
 const ToDoScreen = () => {
+  const queryClient = useQueryClient()
+
+  const { data: todos = [], isLoading: isTodosLoading } = useQuery({
+  queryKey: ['todos'],
+  queryFn: getTodos,
+  })
+
+
+  const { data: groups = [], isLoading } = useQuery({
+  queryKey: ['groups'],
+  queryFn: getGroups,
+  })
+
+  const groupsWithStats = groups.map(group => {
+  const groupTodos = todos.filter(todo => todo.groupId === group.id)
+  const completedCount = groupTodos.filter(t => t.completed).length
+  const total = groupTodos.length
+  return {
+    ...group,
+    completed: completedCount,
+    total,
+  }
+})
+
+
   return (
     <LinearGradient
       colors={['#101010', 'transparent']}
@@ -31,7 +60,7 @@ const ToDoScreen = () => {
       <Text style={styles.boardsText}>Boards</Text>
       <Text style={styles.viewAllText}>View All</Text>
       <View style={styles.cardsWrapper}>
-        <CardDisplay cardCount={8} />
+        <CardContainer groups={groupsWithStats} />
       </View>
 
       <Line 

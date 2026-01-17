@@ -2,6 +2,9 @@ import { Stack } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFonts } from 'expo-font';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+const queryClient = new QueryClient()
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -15,8 +18,10 @@ export default function RootLayout() {
   if (!fontsLoaded) {
     return null; // or splash screen
   }
+  queryClient.clear()
 
   return (
+    <QueryClientProvider client={queryClient}>
     <LinearGradient
       colors={['#0F172A', 'transparent']}
       start={{ x: 0, y: 0 }}
@@ -25,6 +30,7 @@ export default function RootLayout() {
     >
       <Stack screenOptions={{ headerShown: false }} />
     </LinearGradient>
+    </QueryClientProvider>
   );
 }
 
