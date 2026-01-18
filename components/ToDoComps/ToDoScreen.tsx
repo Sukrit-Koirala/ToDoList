@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getGroups,addGroup } from '../../api/groups';
 import CardContainer from '../CustomUI/CardsDisplay/CardsDisplay';
 import { getTodos } from '../../api/todos';
+import { useTheme } from '../../hooks/useTheme';
 
 const ToDoScreen = () => {
   const queryClient = useQueryClient()
@@ -28,17 +29,19 @@ const ToDoScreen = () => {
   const groupTodos = todos.filter(todo => todo.groupId === group.id)
   const completedCount = groupTodos.filter(t => t.completed).length
   const total = groupTodos.length
-  return {
-    ...group,
-    completed: completedCount,
-    total,
-  }
-})
+    return {
+      ...group,
+      completed: completedCount,
+      total,
+    }
+  })
+
+  const { theme, switchTheme} = useTheme();
 
 
   return (
     <LinearGradient
-      colors={['#101010', 'transparent']}
+      colors={[theme.background, 'transparent']}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 0.56 }}
       style={styles.container}
@@ -51,14 +54,14 @@ const ToDoScreen = () => {
           style={{ ...StyleSheet.absoluteFillObject, opacity: 0.25 }}
         />
         <View style={styles.headerContent}>
-          <Text style={styles.headerText}>Good Morning, Suku</Text>
-          <Text style={styles.subText}>Sunday, January 10</Text>
+          <Text style={[styles.headerText,{color:theme.headerText}]}>Good Morning, Suku</Text>
+          <Text style={[styles.subText,{color:theme.headerSubText}]}>Sunday, January 10</Text>
         </View>
       </View>
 
       {/* BOARDS */}
-      <Text style={styles.boardsText}>Boards</Text>
-      <Text style={styles.viewAllText}>View All</Text>
+      <Text style={[styles.boardsText,{color:theme.titleText}]}>Boards</Text>
+      <Text style={[styles.viewAllText,{color:theme.subtitleText}]}>View All</Text>
       <View style={styles.cardsWrapper}>
         <CardContainer groups={groupsWithStats} />
       </View>
@@ -71,8 +74,8 @@ const ToDoScreen = () => {
 
       {/* DAILY TASKS SECTION WRAPPER */}
       <View style={styles.dailyTasksSection}>
-        <Text style={styles.DailyTasks}>Daily Tasks</Text>
-        <Text style={styles.viewAllTasksText}>View All</Text>
+        <Text style={[styles.DailyTasks,{color:theme.outGradientTitle}]}>Daily Tasks</Text>
+        <Text style={[styles.viewAllTasksText,{color:theme.outGradientSubTitle}]}>View All</Text>
 
         {/* VERTICAL SCROLL for TaskCards */}
         <View style={styles.tasksWrapper}>
@@ -119,12 +122,10 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   headerText: {
-    color: 'white',
     fontSize: 24,
     fontFamily: 'PlayFair',
   },
   subText: {
-    color: 'white',
     fontSize: 14,
     fontFamily: 'PlayFair',
   },
@@ -133,14 +134,12 @@ const styles = StyleSheet.create({
   boardsText: {
     marginTop: 48,
     marginLeft: 32,
-    color: 'white',
     fontSize: 32,
     fontFamily: 'PlayFair-Bold-Extra',
   },
 
   viewAllText: {
     marginRight: 8,
-    color: 'white',
     fontSize: 16,
     fontFamily: 'PlayFair',
     fontWeight: 'normal',
@@ -163,13 +162,11 @@ const styles = StyleSheet.create({
   },
   DailyTasks: {
     marginLeft: 32,
-    color: '#101010',
     fontSize: 24,
     fontFamily: 'PlayFair',
   },
   viewAllTasksText: {
     marginRight: 8,
-    color: '#101010',
     fontSize: 16,
     fontFamily: 'PlayFair',
     fontWeight: 'normal',
