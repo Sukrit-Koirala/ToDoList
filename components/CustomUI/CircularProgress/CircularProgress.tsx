@@ -16,7 +16,7 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
   total,
   size = 60,
   strokeWidth = 6,
-  color = '#4CAF50',
+  color = '#ffffff',
   backgroundColor = '#e0e0e0',
 }) => {
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -55,7 +55,7 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
       
       {/* Percentage Text */}
       <View style={styles.textContainer}>
-        <Text style={[styles.percentageText, { fontSize: size * 0.25 }]}>
+        <Text style={[styles.percentageText, { fontSize: size * 0.25, color:color }]}>
           {percentage}%
         </Text>
       </View>
@@ -78,7 +78,6 @@ const styles = StyleSheet.create({
   },
   percentageText: {
     fontWeight: 'bold',
-    color: '#ffffff',
   },
 });
 

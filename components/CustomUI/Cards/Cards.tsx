@@ -3,6 +3,7 @@ import React from 'react';
 import RoundedRectangle from '../RoundedRectangle/RoundedRectangle';
 import { Dimensions } from 'react-native';
 import CircularProgress from '../CircularProgress/CircularProgress';
+import { useTheme } from '../../../hooks/useTheme';
 
 const { width } = Dimensions.get('window');
 
@@ -26,7 +27,9 @@ const Card: React.FC<CardProps> = ({
   completed, 
   total 
 }) => {
+  const {theme} = useTheme();
   return (
+
     <View style={style}>
       <RoundedRectangle style={[styles.card, { backgroundColor: color }]} radius={30}>
         <View style={styles.contentRow}>
@@ -40,7 +43,6 @@ const Card: React.FC<CardProps> = ({
             total={total}
             size={70}
             strokeWidth={8}
-            color={'#ffff'}
           />
         </View>
       </RoundedRectangle>

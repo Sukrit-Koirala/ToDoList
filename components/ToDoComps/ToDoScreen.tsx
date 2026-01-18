@@ -11,8 +11,14 @@ import CardContainer from '../CustomUI/CardsDisplay/CardsDisplay';
 import { getTodos } from '../../api/todos';
 import { useTheme } from '../../hooks/useTheme';
 
+import { Pressable } from 'react-native'
+import { useModal } from '../CustomUI/Modal/ModalContext'
+
+
 const ToDoScreen = () => {
   const queryClient = useQueryClient()
+  const { openModal } = useModal()
+
 
   const { data: todos = [], isLoading: isTodosLoading } = useQuery({
   queryKey: ['todos'],
@@ -39,7 +45,7 @@ const ToDoScreen = () => {
   const { theme, switchTheme} = useTheme();
 
   useEffect(() => {
-    switchTheme('pink');
+    switchTheme('blue');
   }, []); 
 
   return (
@@ -64,7 +70,11 @@ const ToDoScreen = () => {
 
       {/* BOARDS */}
       <Text style={[styles.boardsText,{color:theme.titleText}]}>Boards</Text>
-      <Text style={[styles.viewAllText,{color:theme.subtitleText}]}>View All</Text>
+      <Pressable onPress={() => openModal('OPEN_BOARDS')}>
+        <Text style={[styles.viewAllText, { color: theme.subtitleText }]}>
+          View All
+        </Text>
+      </Pressable>
       <View style={styles.cardsWrapper}>
         <CardContainer groups={groupsWithStats} />
       </View>
@@ -138,7 +148,7 @@ const styles = StyleSheet.create({
     marginTop: 48,
     marginLeft: 32,
     fontSize: 32,
-    fontFamily: 'PlayFair-Bold-Extra',
+    fontFamily: 'PlayFair',
   },
 
   viewAllText: {

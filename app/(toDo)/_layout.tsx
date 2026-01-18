@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ToDoProvider } from '../../contexts/ToDoContext/ToDoProvider';
 import AddTabButton from '../../components/CustomUI/AddTabButton/AddTabButton';
 import { useTheme } from '../../hooks/useTheme';
+import { ModalProvider } from '../../components/CustomUI/Modal/ModalProvider';
 
 
 export default function RootLayout() {
@@ -10,6 +11,7 @@ export default function RootLayout() {
 
   return (
     <ToDoProvider>
+      <ModalProvider>
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: theme.headerBackground, // icon color when focused
@@ -97,6 +99,7 @@ export default function RootLayout() {
         }}
       />
     </Tabs>
+    </ModalProvider>
     </ToDoProvider>
   );
 }

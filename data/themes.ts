@@ -1,13 +1,17 @@
+// themes.ts
+
 export const monoTheme = {
   background: '#101010',
   header: '#555454',
   headerBackground: '#555454',
-  headerText: '#ffffff',       
-  headerSubText: '#cccccc',    
-  titleText: '#f5f5f5',        
-  subtitleText: '#ffffff',     
+  headerText: '#ffffff',
+  headerSubText: '#cccccc',
+  titleText: '#f5f5f5',
+  subtitleText: '#ffffff',
   outGradientTitle: '#4e4e4e',
   outGradientSubTitle: '#4e4e4e',
+
+  accent: '#FFD54F',
 
   cardThemes: {
     colorOne: '#404040',
@@ -19,7 +23,7 @@ export const monoTheme = {
     calendarBackground: '#1A1A1A',
     calendarCardBackground: '#2A2A2A',
     calendarActiveBackground: '#555555',
-  }
+  },
 }
 
 export const blueTheme = {
@@ -33,6 +37,8 @@ export const blueTheme = {
   outGradientTitle: '#002a5d',
   outGradientSubTitle: '#3F7FCC',
 
+  accent: '#FFB703',
+
   cardThemes: {
     colorOne: '#0D47A1',
     colorTwo: '#1E88FF',
@@ -43,7 +49,7 @@ export const blueTheme = {
     calendarBackground: '#D0E7FF',
     calendarCardBackground: '#A0CFFF',
     calendarActiveBackground: '#5FA8F0',
-  }
+  },
 }
 
 export const greenTheme = {
@@ -57,6 +63,8 @@ export const greenTheme = {
   outGradientTitle: '#0A3F26',
   outGradientSubTitle: '#3FAE7C',
 
+  accent: '#FF8F00',
+
   cardThemes: {
     colorOne: '#1B5E20',
     colorTwo: '#2E7D32',
@@ -67,7 +75,7 @@ export const greenTheme = {
     calendarBackground: '#CFFFE0',
     calendarCardBackground: '#9FE3C0',
     calendarActiveBackground: '#5FBF8F',
-  }
+  },
 }
 
 export const pinkTheme = {
@@ -81,6 +89,8 @@ export const pinkTheme = {
   outGradientTitle: '#3A0A1F',
   outGradientSubTitle: '#C84A7F',
 
+  accent: '#3A86FF',
+
   cardThemes: {
     colorOne: '#880E4F',
     colorTwo: '#D81B60',
@@ -88,10 +98,10 @@ export const pinkTheme = {
   },
 
   calendarThemes: {
-    calendarBackground: '#fee2ee',
+    calendarBackground: '#FEE2EE',
     calendarCardBackground: '#FFB6D5',
     calendarActiveBackground: '#F47FB2',
-  }
+  },
 }
 
 export const orangeTheme = {
@@ -105,6 +115,8 @@ export const orangeTheme = {
   outGradientTitle: '#3A1E0A',
   outGradientSubTitle: '#D9743F',
 
+  accent: '#0057D9',
+
   cardThemes: {
     colorOne: '#BF360C',
     colorTwo: '#E65100',
@@ -115,7 +127,7 @@ export const orangeTheme = {
     calendarBackground: '#FFE5CC',
     calendarCardBackground: '#FFC28A',
     calendarActiveBackground: '#F39C4A',
-  }
+  },
 }
 
 export const purpleTheme = {
@@ -129,6 +141,8 @@ export const purpleTheme = {
   outGradientTitle: '#1E0A3A',
   outGradientSubTitle: '#6F3FCC',
 
+  accent: '#00E5FF',
+
   cardThemes: {
     colorOne: '#311B92',
     colorTwo: '#4A1EA8',
@@ -139,7 +153,7 @@ export const purpleTheme = {
     calendarBackground: '#E3DCFF',
     calendarCardBackground: '#C5B6FF',
     calendarActiveBackground: '#8F7FE8',
-  }
+  },
 }
 
 export const themes = {
