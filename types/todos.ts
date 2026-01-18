@@ -16,7 +16,6 @@ export enum TodoGroup {
 export interface Group {
   id: TodoGroup | string
   name: string
-  color: string
 }
 
 export interface Todo {

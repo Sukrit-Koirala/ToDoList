@@ -1,14 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Group } from '../types/todos'
 
+
 export type { Group } from '../types/todos'
 
 const GROUPS_KEY = 'GROUPS_V3'
 
 const DEFAULT_GROUPS: Group[] = [
-  { id: 'MORNING', name: 'Morning', color: '#101010' },
-  { id: 'WORKOUT', name:'Workout',color: '#200069'},
-  { id: 'SCHOOL', name: 'School', color: '#00053e' },
+  { id: 'MORNING', name: 'Morning' },
+  { id: 'WORKOUT', name:'Workout'},
+  { id: 'SCHOOL', name: 'School' },
 ]
 
 export const getGroups = async (): Promise<Group[]> => {

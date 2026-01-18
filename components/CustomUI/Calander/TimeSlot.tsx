@@ -1,6 +1,7 @@
 import { StyleSheet, View } from 'react-native'
 import React from 'react'
 import { TimeRow } from './TimeRow'
+import { useTheme } from '../../../hooks/useTheme'
 
 interface TimeSlotProps {
   label: string

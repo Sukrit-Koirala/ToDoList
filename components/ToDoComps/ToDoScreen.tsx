@@ -1,12 +1,12 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import RoundedRectangle from '../CustomUI/RoundedRectangle/RoundedRectangle';
 import Line from '../CustomUI/Line/Line';
 import TaskCard from '../CustomUI/TaskCards/TaskCard';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getGroups,addGroup } from '../../api/groups';
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { getGroups } from '../../api/groups';
 import CardContainer from '../CustomUI/CardsDisplay/CardsDisplay';
 import { getTodos } from '../../api/todos';
 import { useTheme } from '../../hooks/useTheme';
@@ -38,6 +38,9 @@ const ToDoScreen = () => {
 
   const { theme, switchTheme} = useTheme();
 
+  useEffect(() => {
+    switchTheme('pink');
+  }, []); 
 
   return (
     <LinearGradient
@@ -49,7 +52,7 @@ const ToDoScreen = () => {
       {/* HEADER */}
       <View style={styles.headerWrapper}>
         <RoundedRectangle
-          backgroundColor="#555454"
+          backgroundColor={theme.headerBackground}
           radius={20}
           style={{ ...StyleSheet.absoluteFillObject, opacity: 0.25 }}
         />
@@ -157,8 +160,8 @@ const styles = StyleSheet.create({
 
   /* DAILY TASKS */
   dailyTasksSection: {
-    marginTop: 8,
-    flex: 0.9, // allow vertical scroll to expand within this space
+    marginTop: 16,
+    flex: 0.8, // allow vertical scroll to expand within this space
   },
   DailyTasks: {
     marginLeft: 32,

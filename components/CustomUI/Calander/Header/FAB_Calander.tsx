@@ -1,6 +1,7 @@
 import React from 'react'
 import { StyleSheet, TouchableOpacity, ViewStyle } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { useTheme } from '../../../../hooks/useTheme'
 
 interface CalendarFABProps {
   onPress?: () => void
@@ -11,11 +12,13 @@ const CalendarFAB: React.FC<CalendarFABProps> = ({
   onPress,
   style,
 }) => {
+  const {theme} = useTheme();
   return (
+
     <TouchableOpacity
       activeOpacity={0.85}
       onPress={onPress}
-      style={[styles.fab, style]}
+      style={[styles.fab, style, {backgroundColor:theme.calendarThemes.calendarActiveBackground}]}
     >
       <Ionicons name="calendar-outline" size={18} color="#fff" style={{alignSelf:'center'}} />
     </TouchableOpacity>
@@ -29,7 +32,6 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 8,
-    backgroundColor: '#7e7e7e',
     left: '60%',
     top:4,
     justifyContent:'center',

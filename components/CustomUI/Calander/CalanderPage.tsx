@@ -4,18 +4,17 @@ import TimeCard from './TimeArea'
 import { LinearGradient } from 'expo-linear-gradient'
 import CalanderHeader from './Header/CalanderHeader'
 import CalendarFAB from './Header/FAB_Calander'
+import { useTheme } from '../../../hooks/useTheme'
 
 const CalanderPage = () => {
+  const {theme} = useTheme();
   return (
        <LinearGradient
-            colors={['#101010', 'transparent']}
+            colors={[theme.background, 'transparent']}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 0.56 }}
             style={styles.container}
           > 
-
-
-
             <View style={styles.headerContainer}> 
                 <View style={styles.monthRow}>
                   <Text style={styles.monthText}>January</Text>

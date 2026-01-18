@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import React from 'react';
 import RoundedRectangle from '../RoundedRectangle/RoundedRectangle';
 import { Dimensions } from 'react-native';
@@ -15,17 +15,19 @@ export interface CardProps {
   color?: string;
   completed: number;
   total: number;
+  style?: StyleProp<ViewStyle>;
 }
 
 const Card: React.FC<CardProps> = ({ 
   title = 'Title Here', 
   subtitle = 'Subtitle Here', 
   color = "#101010", 
+  style,
   completed, 
   total 
 }) => {
   return (
-    <View>
+    <View style={style}>
       <RoundedRectangle style={[styles.card, { backgroundColor: color }]} radius={30}>
         <View style={styles.contentRow}>
           <View style={styles.textContainer}>
@@ -75,6 +77,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 12,
     fontWeight: '400',
-    color: '#aaa',
+    color: '#dcdcdc',
   },
 });

@@ -3,6 +3,7 @@ import React from 'react'
 import RoundedRectangle from '../RoundedRectangle/RoundedRectangle'
 import TimeSlot from './TimeSlot'
 import TaskCard from './TaskCard'
+import { useTheme } from '../../../hooks/useTheme'
 
 const HOURS = [
   '7 AM', '8 AM', '9 AM', '10 AM', '11 AM', '12 PM',
@@ -18,9 +19,10 @@ const tasks = [
 ]
 
 const TimeCard = () => {
+  const {theme} = useTheme();
   return (
     <View>
-      <RoundedRectangle radius={20} style={styles.body}>
+      <RoundedRectangle radius={20} style={[styles.body,{backgroundColor:theme.calendarThemes.calendarBackground}]}>
         {HOURS.map((hour) => (
           <TimeSlot key={hour} label={hour} />
         ))}
@@ -38,7 +40,6 @@ export default TimeCard
 
 const styles = StyleSheet.create({
   body: {
-    backgroundColor: '#d1d1d1',
     paddingVertical: 32,
     position: 'relative', // needed for absolute TaskCard
   },

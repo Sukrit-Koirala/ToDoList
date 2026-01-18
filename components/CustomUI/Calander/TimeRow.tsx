@@ -1,17 +1,19 @@
 // TimeRow.tsx
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
+import { useTheme } from '../../../hooks/useTheme'
 
 interface TimeRowProps {
   label: string
 }
 
 export const TimeRow: React.FC<TimeRowProps> = ({ label }) => {
+  const {theme} = useTheme();
   return (
     <View style={styles.row}>
       {/* Time text column */}
       <View style={styles.timeColumn}>
-        <Text style={styles.timeText}>{label}</Text>
+        <Text style={[styles.timeText,{color:theme.headerText}]}>{label}</Text>
       </View>
 
       {/* Dot column + line */}
@@ -55,7 +57,6 @@ const styles = StyleSheet.create({
 
   timeText: {
     fontSize: 12,
-    color: '#101010',
     fontWeight: '600',
   },
 

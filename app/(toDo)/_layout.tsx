@@ -2,15 +2,18 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ToDoProvider } from '../../contexts/ToDoContext/ToDoProvider';
 import AddTabButton from '../../components/CustomUI/AddTabButton/AddTabButton';
+import { useTheme } from '../../hooks/useTheme';
 
 
 export default function RootLayout() {
+  const { theme, isLoading } = useTheme();
+
   return (
     <ToDoProvider>
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#101010',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: theme.headerBackground, // icon color when focused
+        tabBarInactiveTintColor: theme.headerSubText || 'gray', // icon color when unfocused
         tabBarStyle: {
           height: 78,
           overflow: 'visible', // 👈 REQUIRED

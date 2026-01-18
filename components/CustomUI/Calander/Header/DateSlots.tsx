@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
+import { useTheme } from '../../../../hooks/useTheme'
 
 interface DateSlotsProps {
   day: string
@@ -12,8 +13,9 @@ const DateSlots: React.FC<DateSlotsProps> = ({
   date,
   active = false,
 }) => {
+  const {theme} = useTheme();
   return (
-    <View style={[styles.container, active && styles.active]}>
+    <View style={[styles.container, active && {backgroundColor: theme.headerBackground}]}>
       <Text style={styles.day}>{day}</Text>
       <Text style={styles.date}>{date}</Text>
     </View>
@@ -30,14 +32,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  active: {
-    backgroundColor: '#7e7e7e',
-  },
+
   day: {
     fontSize: 12,
-    color: '#ddd',
+    color: '#ffff',
     fontWeight: '500',
-    opacity: 0.6,
+    opacity: 0.75,
   },
   date: {
     fontSize: 18,

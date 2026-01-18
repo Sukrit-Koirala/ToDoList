@@ -1,20 +1,23 @@
 import { Pressable, View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import RoundedRectangle from '../RoundedRectangle/RoundedRectangle';
+import { useTheme } from '../../../hooks/useTheme'; // adjust path if needed
 
 function AddTabButton({ onPress }: any) {
+  const { theme, isLoading } = useTheme();
+
+  if (isLoading) return null; // optional
+
   return (
     <Pressable onPress={onPress} style={styles.wrapper}>
       <View style={styles.halo}>
-        <View style={styles.button}>
-          <Ionicons name="add" size={28} color="#fff" />
+        <View style={[styles.button,{backgroundColor:theme.headerBackground}]}>
+          <Ionicons name="add" size={28} color={'#ffff'} /> 
+          {/* Only icon color changes based on theme */}
         </View>
       </View>
     </Pressable>
   );
 }
-
-
 
 export default AddTabButton;
 
@@ -40,6 +43,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
-
   },
 });
