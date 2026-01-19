@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 import RoundedRectangle from '../RoundedRectangle/RoundedRectangle'
 import { Ionicons } from '@expo/vector-icons'
+import { getTaskIcon } from '../utils/taskIcons'
 
 /* ---------- Types ---------- */
 interface TaskCardProps {
@@ -16,23 +17,6 @@ interface TaskCardProps {
 /* ---------- Constants ---------- */
 const SLOT_HEIGHT = 80
 
-const ICON_MAP: Record<string, keyof typeof Ionicons.glyphMap> = {
-  gym: 'barbell',
-  workout: 'fitness',
-  meeting: 'people',
-  call: 'call',
-  study: 'book',
-  code: 'code-slash',
-  class: 'school',
-  sleep: 'moon',
-  coffee: 'cafe',
-  lunch: 'fast-food',
-  dinner: 'restaurant',
-  email: 'mail',
-  grocery: 'cart',
-  travel: 'airplane',
-  meditate: 'leaf',
-}
 
 /* ---------- Variant Config ---------- */
 const VARIANT_CONFIG = {
@@ -72,10 +56,7 @@ const getVariant = (duration: number) => {
   return 'full'
 }
 
-const getIconForTitle = (title: string) => {
-  const firstWord = title.trim().split(' ')[0].toLowerCase()
-  return ICON_MAP[firstWord] ?? 'ellipse'
-}
+
 
 /* ---------- Component ---------- */
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -96,7 +77,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const cardHeight =
     (durationMinutes / 60) * SLOT_HEIGHT
 
-  const iconName = getIconForTitle(title)
+  const iconName = getTaskIcon(title)
 
   return (
     <View

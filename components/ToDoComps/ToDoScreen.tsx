@@ -70,7 +70,7 @@ const ToDoScreen = () => {
 
       {/* BOARDS */}
       <Text style={[styles.boardsText,{color:theme.titleText}]}>Boards</Text>
-      <Pressable onPress={() => openModal('OPEN_BOARDS')}>
+      <Pressable onPress={() => openModal('OPEN_BOARDS',groupsWithStats)}>
         <Text style={[styles.viewAllText, { color: theme.subtitleText }]}>
           View All
         </Text>
