@@ -1,19 +1,22 @@
 // modal/OpenBoardsModal.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import RoundedRectangle from '../RoundedRectangle/RoundedRectangle';
 import ModalCards from './ModalCards';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getGroups } from '../../../api/groups';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { addGroup, getGroups } from '../../../api/groups';
 import { getTodos } from '../../../api/todos';
 import SearchBar from './SearchBar'; // Import the search bar
 import { useTheme } from '../../../hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
+import { useRef } from 'react'
+import AddGroupModal from './AddGroupModal'
 
 export default function OpenBoardsModal({ sheetRef, snapPoints, onClose, renderBackdrop }: any) {
   
   const queryClient = useQueryClient();
+  const [newGroupName, setNewGroupName] = useState('')
   const {theme} = useTheme();
   const { data: groups = [] } = useQuery({
     queryKey: ['groups'],
@@ -35,6 +38,27 @@ export default function OpenBoardsModal({ sheetRef, snapPoints, onClose, renderB
       total,
     };
   });
+
+  const addGroupSheetRef = useRef<BottomSheetModal>(null)
+
+  const addGroupMutation = useMutation({
+    mutationFn: (name: string) => addGroup({
+      id: name.trim().toUpperCase().replace(/\s+/g, '_'),
+      name: name.trim(),
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['groups'] })
+      setNewGroupName('')
+      addGroupSheetRef.current?.dismiss()
+    },
+  })
+
+  const handleAddGroup = () => {
+    if (newGroupName.trim()) {
+      addGroupMutation.mutate(newGroupName)
+    }
+  }
+
 
   return (
     <BottomSheetModal 
@@ -69,7 +93,7 @@ export default function OpenBoardsModal({ sheetRef, snapPoints, onClose, renderB
                   title={group.name}
                   completed={group.completed}
                   total={group.total}
-                  active={index === 0} // active only for first
+                  active={index === 0}
                   onPress={() => console.log('Selected board:', group.id)}
                 />
               ))
@@ -84,19 +108,28 @@ export default function OpenBoardsModal({ sheetRef, snapPoints, onClose, renderB
 
           <TouchableOpacity
             style={[styles.fab,{backgroundColor:theme.background}]}
-            onPress={() => {
-              console.log('Quick Add pressed');
-              // later: open add-board or add-task modal
+             onPress={() => {
+              addGroupSheetRef.current?.present()
             }}
-            activeOpacity={0.85}
           >
             <Ionicons name="add" size={22} color="#fff" />
             <Text style={styles.fabText}>Quick Add</Text>
           </TouchableOpacity>
+          
+          <AddGroupModal
+            sheetRef={addGroupSheetRef}
+            value={newGroupName}
+            onChangeText={setNewGroupName}
+            onAdd={handleAddGroup}
+            onCancel={() => addGroupSheetRef.current?.dismiss()}
+            accentColor={theme.background}
+          />
 
         </View>
       </View>
     </BottomSheetModal>
+
+    
   );
 }
 
@@ -125,7 +158,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   searchWrapper: {
-    marginBottom: 16, // spacing between search bar and board list
+    marginBottom: 16,
   },
   searchBar: {
     flexDirection: 'row',
@@ -157,8 +190,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     height: 48,
     borderRadius: 26,
-    elevation: 6, // Android shadow
-    shadowColor: '#000', // iOS shadow
+    elevation: 6,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 6,
