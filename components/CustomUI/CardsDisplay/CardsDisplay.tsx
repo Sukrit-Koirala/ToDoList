@@ -65,6 +65,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ groups }) => {
               completed={group.completed}
               total={group.total}
               style={{ opacity: index === activeIndex ? 1 : 0.5 }}
+              
             />
           </TouchableOpacity>
         );

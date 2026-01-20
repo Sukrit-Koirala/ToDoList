@@ -6,8 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native'
-import { useQuery } from '@tanstack/react-query'
-import { getTodos } from '../../../api/todos'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { getTodos, toggleTodo } from '../../../api/todos'
 import { useTheme } from '../../../hooks/useTheme'
 import RoundedRectangle from '../RoundedRectangle/RoundedRectangle'
 import TaskItem from './TaskModalCard'
@@ -30,11 +30,20 @@ const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
   onClose,
 }) => {
   const { theme } = useTheme()
+  const queryClient = useQueryClient()
 
-  const { data: todos = [], isLoading } = useQuery({
-    queryKey: ['todos', group.id],
-    queryFn: () => getTodos(),
-  })
+const { data: todos = [], isLoading } = useQuery({
+  queryKey: ['todos'],  // ✅ Use same key as ToDoScreen
+  queryFn: () => getTodos(),
+  select: (data) => data.filter((todo: any) => todo.groupId === group.id)  // ✅ Filter in select
+})
+
+const toggleMutation = useMutation({
+  mutationFn: (todoId: string) => toggleTodo(todoId),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['todos'] })  // ✅ Single invalidation
+  },
+})
 
   const groupTodos = todos.filter(
     (todo: any) => todo.groupId === group.id
@@ -86,9 +95,7 @@ const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
                 time={task.time}
                 duration={task.duration}
                 location={task.location}
-                onToggle={() => {
-                  // TODO: toggle task completion
-                }}
+                onToggle={() => toggleMutation.mutate(task.id)}
               />
             ))
           ) : (

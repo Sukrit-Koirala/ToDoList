@@ -3,10 +3,11 @@ import React from 'react'
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
+  withTiming,
 } from 'react-native-reanimated'
 import { useTheme } from '../../../hooks/useTheme'
 import RoundedRectangle from '../RoundedRectangle/RoundedRectangle'
+import { useQueryClient } from '@tanstack/react-query'
 
 interface TaskItemProps {
   index: number
@@ -29,14 +30,15 @@ const TaskItem: React.FC<TaskItemProps> = ({
 }) => {
   const { theme } = useTheme()
   const scale = useSharedValue(1)
+  const queryClient = useQueryClient() 
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }))
 
   const handlePress = () => {
-    scale.value = withSpring(0.97, {}, () => {
-      scale.value = withSpring(1)
+    scale.value = withTiming(0.95, { duration: 50 }, () => {
+      scale.value = withTiming(1, { duration: 100 })
     })
     onToggle()
   }
@@ -49,8 +51,8 @@ const TaskItem: React.FC<TaskItemProps> = ({
           style={[
             styles.card,
             {
-              backgroundColor: completed ? '#F5F5F5' : '#FFFFFF',
-              opacity: completed ? 0.6 : 1,
+              backgroundColor: completed ? theme.background : '#FFFFFF',
+              opacity: completed ? 0.4 : 1,
             },
           ]}
         >
@@ -159,7 +161,6 @@ const taskStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 4,
   },
 
   title: {
@@ -168,6 +169,7 @@ const taskStyles = StyleSheet.create({
     color: '#1a1a1a',
     flex: 1,
     marginRight: 12,
+    marginTop:5,
   },
 
   time: {

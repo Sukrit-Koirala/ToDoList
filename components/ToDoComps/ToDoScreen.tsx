@@ -13,6 +13,7 @@ import { useTheme } from '../../hooks/useTheme';
 
 import { Pressable } from 'react-native'
 import { useModal } from '../CustomUI/Modal/ModalContext'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const ToDoScreen = () => {
@@ -20,7 +21,7 @@ const ToDoScreen = () => {
   const { openModal } = useModal()
 
 
-  const { data: todos = [], isLoading: isTodosLoading } = useQuery({
+  const { data: todos = [], isLoading: isTodosLoading,dataUpdatedAt } = useQuery({
   queryKey: ['todos'],
   queryFn: getTodos,
   })
@@ -30,6 +31,19 @@ const ToDoScreen = () => {
   queryKey: ['groups'],
   queryFn: getGroups,
   })
+
+  //   useEffect(() => {
+  //   const clearStorage = async () => {
+  //     try {
+  //       await AsyncStorage.clear();  // ✅ Clears ALL data
+  //       console.log('AsyncStorage cleared');
+  //     } catch (error) {
+  //       console.error('Error clearing AsyncStorage:', error);
+  //     }
+  //   };
+
+  //   clearStorage();
+  // }, []); // Empty dependency array = runs once on mount
 
   const groupsWithStats = groups.map(group => {
   const groupTodos = todos.filter(todo => todo.groupId === group.id)
@@ -45,7 +59,7 @@ const ToDoScreen = () => {
   const { theme, switchTheme} = useTheme();
 
   useEffect(() => {
-    switchTheme('purple');
+    switchTheme('blue');
   }, []); 
 
   return (
@@ -76,7 +90,9 @@ const ToDoScreen = () => {
         </Text>
       </Pressable>
       <View style={styles.cardsWrapper}>
-        <CardContainer groups={groupsWithStats} />
+        <CardContainer 
+        key={dataUpdatedAt}
+        groups={groupsWithStats} />
       </View>
 
       <Line 
