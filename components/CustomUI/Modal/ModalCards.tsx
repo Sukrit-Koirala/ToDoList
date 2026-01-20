@@ -94,8 +94,8 @@ const ModalCards: React.FC<ModalCardsProps> = ({
               total={total}
               size={56}
               strokeWidth={6}
-              color="#ffffff"
-              backgroundColor= '#ffffff'
+              backgroundColor= {theme.cardThemes.colorThree}
+              strokeColor='#ffffff'
             />
           )}
         </View>

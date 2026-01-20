@@ -17,6 +17,7 @@ interface CircularProgressProps {
   color?: string;
   backgroundColor?: string;
   animationDuration?: number;
+  strokeColor?: string,
 }
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -29,6 +30,7 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
   color = '#ffffff',
   backgroundColor = '#e0e0e0',
   animationDuration = 800,
+  strokeColor
 }) => {
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
   const radius = (size - strokeWidth) / 2;
@@ -82,7 +84,7 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={theme.background}
+          stroke={strokeColor? strokeColor:theme.background}
           strokeWidth={strokeWidth}
           fill="none"
           strokeDasharray={circumference}
