@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react'
 
-type ModalType = 'ADD_TASK' | 'OPEN_BOARDS'
+type ModalType = 'GROUP_DETAIL' | 'OPEN_BOARDS'
 
 interface ModalState {
   type: ModalType | null
