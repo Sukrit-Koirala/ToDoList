@@ -1,6 +1,13 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
+import Animated, {
+  useSharedValue,
+  useAnimatedProps,
+  withTiming,
+  runOnJS,
+} from 'react-native-reanimated';
+import { useTheme } from '../../../hooks/useTheme';
 
 interface CircularProgressProps {
   completed: number;
@@ -9,7 +16,10 @@ interface CircularProgressProps {
   strokeWidth?: number;
   color?: string;
   backgroundColor?: string;
+  animationDuration?: number;
 }
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const CircularProgress: React.FC<CircularProgressProps> = ({
   completed,
@@ -18,16 +28,47 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
   strokeWidth = 6,
   color = '#ffffff',
   backgroundColor = '#e0e0e0',
+  animationDuration = 800,
 }) => {
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  const animatedPercentage = useSharedValue(0);
+  const [displayPercentage, setDisplayPercentage] = useState(0);
+
+  const {theme} = useTheme()
+
+  useEffect(() => {
+    animatedPercentage.value = withTiming(
+      percentage,
+      { duration: animationDuration },
+      (finished) => {
+        if (finished) {
+          runOnJS(setDisplayPercentage)(percentage);
+        }
+      }
+    );
+
+    // Update display during animation
+    const interval = setInterval(() => {
+      runOnJS(setDisplayPercentage)(Math.round(animatedPercentage.value));
+    }, 16); // ~60fps
+
+    return () => clearInterval(interval);
+  }, [percentage]);
+
+  const animatedCircleProps = useAnimatedProps(() => {
+    const strokeDashoffset =
+      circumference - (animatedPercentage.value / 100) * circumference;
+    return {
+      strokeDashoffset,
+    };
+  });
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>
       <Svg width={size} height={size} style={styles.svg}>
-        {/* Background Circle */}
         <Circle
           cx={size / 2}
           cy={size / 2}
@@ -36,27 +77,25 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
           strokeWidth={strokeWidth}
           fill="none"
         />
-        
-        {/* Progress Circle */}
-        <Circle
+
+        <AnimatedCircle
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={color}
+          stroke={theme.background}
           strokeWidth={strokeWidth}
           fill="none"
           strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
           rotation="-90"
           origin={`${size / 2}, ${size / 2}`}
+          animatedProps={animatedCircleProps}
         />
       </Svg>
-      
-      {/* Percentage Text */}
+
       <View style={styles.textContainer}>
-        <Text style={[styles.percentageText, { fontSize: size * 0.25, color:color }]}>
-          {percentage}%
+        <Text style={[styles.percentageText, { fontSize: size * 0.25, color }]}>
+          {displayPercentage}%
         </Text>
       </View>
     </View>

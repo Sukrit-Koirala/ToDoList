@@ -1,13 +1,17 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native'
+import { BottomSheetScrollView } from '@gorhom/bottom-sheet'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getTodos, toggleTodo } from '../../../api/todos'
+import { getTodos, toggleTodo, addTodo, TodoGroup } from '../../../api/todos'
 import { useTheme } from '../../../hooks/useTheme'
 import RoundedRectangle from '../RoundedRectangle/RoundedRectangle'
 import TaskItem from './TaskModalCard'
@@ -15,7 +19,7 @@ import { Ionicons } from '@expo/vector-icons'
 
 interface GroupDetailModalProps {
   group: {
-    id: string
+    id: TodoGroup
     name: string
     completed?: number
     total?: number
@@ -31,35 +35,51 @@ const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
 }) => {
   const { theme } = useTheme()
   const queryClient = useQueryClient()
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [newTaskTitle, setNewTaskTitle] = useState('')
 
-const { data: todos = [], isLoading } = useQuery({
-  queryKey: ['todos'],  // ✅ Use same key as ToDoScreen
-  queryFn: () => getTodos(),
-  select: (data) => data.filter((todo: any) => todo.groupId === group.id)  // ✅ Filter in select
-})
+  const { data: todos = [], isLoading } = useQuery({
+    queryKey: ['todos'],
+    queryFn: () => getTodos(),
+    select: (data) => data.filter((todo: any) => todo.groupId === group.id)
+  })
 
-const toggleMutation = useMutation({
-  mutationFn: (todoId: string) => toggleTodo(todoId),
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['todos'] })  // ✅ Single invalidation
-  },
-})
+  const toggleMutation = useMutation({
+    mutationFn: (todoId: string) => toggleTodo(todoId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['todos'] })
+    },
+  })
+
+  const addMutation = useMutation({
+    mutationFn: (title: string) => addTodo({
+      title,
+      groupId: group.id,
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['todos'] })
+      setNewTaskTitle('')
+      setShowAddModal(false)
+    },
+  })
 
   const groupTodos = todos.filter(
     (todo: any) => todo.groupId === group.id
   )
 
-  const completedCount = groupTodos.filter(
-    (t: any) => t.completed
-  ).length
+  const handleAddTask = () => {
+    if (newTaskTitle.trim()) {
+      addMutation.mutate(newTaskTitle.trim())
+    }
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: cardColor }]}>
       {/* HEADER */}
       <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.closeIcon}>
-            <Ionicons name="close" size={32} color="white" />
-          </TouchableOpacity>
+        <TouchableOpacity onPress={onClose} style={styles.closeIcon}>
+          <Ionicons name="close" size={32} color="white" />
+        </TouchableOpacity>
 
         <View style={styles.headerTop}>
           <Text style={styles.title}>{group.name}</Text>
@@ -67,19 +87,21 @@ const toggleMutation = useMutation({
       </View>
 
       {/* CONTENT CARD */}
-      <RoundedRectangle
-        radius={28}
-        style={styles.cardBg}
-        backgroundColor="#F5F5F5"
-      >
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Tasks</Text>
-          <TouchableOpacity>
-            <Text style={styles.moreButton}>⋯</Text>
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView 
+      <View style={styles.cardBg}>
+        <RoundedRectangle
+          radius={28}
+          backgroundColor="#F5F5F5"
+        >
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>Tasks</Text>
+            <TouchableOpacity>
+              <Text style={styles.moreButton}>⋯</Text>
+            </TouchableOpacity>
+          </View>
+        </RoundedRectangle>
+        
+        <BottomSheetScrollView 
+          style={styles.scrollViewWrapper}
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
         >
@@ -101,22 +123,81 @@ const toggleMutation = useMutation({
           ) : (
             <Text style={styles.emptyText}>No tasks yet</Text>
           )}
-        </ScrollView>
-      </RoundedRectangle>
+        </BottomSheetScrollView>
+      </View>
 
       {/* BOTTOM ACTION */}
       {onClose && (
         <TouchableOpacity
-          onPress={() => {
-            console.log('Quick Add pressed');
-            // later: open add task modal
-          }}
-          style={[styles.quickAddButton,{backgroundColor: cardColor || '#101010'}]}
+          onPress={() => setShowAddModal(true)}
+          style={[styles.quickAddButton, { backgroundColor: cardColor || '#101010' }]}
         >
           <Text style={styles.quickAddIcon}>+</Text>
           <Text style={styles.quickAddText}>Quick Add</Text>
         </TouchableOpacity>
       )}
+
+      {/* ADD TASK MODAL */}
+      <Modal
+        visible={showAddModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowAddModal(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.modalOverlay}
+            onPress={() => setShowAddModal(false)}
+          >
+            <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
+              <View style={styles.addModalContent}>
+                <Text style={styles.addModalTitle}>Add New Task</Text>
+                
+                <TextInput
+                  style={styles.input}
+                  placeholder="Task title..."
+                  placeholderTextColor="#999"
+                  value={newTaskTitle}
+                  onChangeText={setNewTaskTitle}
+                  autoFocus
+                  onSubmitEditing={handleAddTask}
+                />
+
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.cancelButton]}
+                    onPress={() => {
+                      setNewTaskTitle('')
+                      setShowAddModal(false)
+                    }}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.modalButton,
+                      styles.addButton,
+                      { backgroundColor: cardColor || '#101010' },
+                      !newTaskTitle.trim() && styles.addButtonDisabled
+                    ]}
+                    onPress={handleAddTask}
+                    disabled={!newTaskTitle.trim() || addMutation.isPending}
+                  >
+                    <Text style={styles.addButtonText}>
+                      {addMutation.isPending ? 'Adding...' : 'Add Task'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   )
 }
@@ -134,7 +215,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     alignItems: 'center',
   },
-   closeIcon: {
+
+  closeIcon: {
     position: 'absolute',
     left: 16,
     zIndex: 10,
@@ -155,28 +237,6 @@ const styles = StyleSheet.create({
     fontFamily: 'PlayFair',
   },
 
-  closeButton: {
-    position: 'absolute',
-    top: -8,
-    left: 0,
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
-  },
-
-  closeButtonText: {
-    color: 'white',
-    fontSize: 26,
-  },
-
-  subtitle: {
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.7)',
-    fontFamily: 'PlayFair',
-  },
-
   cardBg: {
     flex: 1,
     marginHorizontal: 0,
@@ -190,21 +250,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 26,
     paddingTop: 24,
     paddingBottom: 16,
-    alignContent:'center',
+    alignContent: 'center',
   },
 
   cardTitle: {
     fontSize: 17,
     fontWeight: '600',
     color: '#666',
-    paddingHorizontal:0,
-
+    paddingHorizontal: 0,
   },
 
   moreButton: {
     fontSize: 24,
     color: '#999',
     fontWeight: '700',
+  },
+
+  scrollViewWrapper: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+    marginTop: -21,
+    paddingTop:8,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
 
   scrollContainer: {
@@ -246,5 +314,79 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
     marginLeft: 8,
+  },
+
+  // Add Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  addModalContent: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 24,
+    width: 320,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+  },
+
+  addModalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 20,
+  },
+
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+
+  modalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+
+  cancelButton: {
+    backgroundColor: '#f0f0f0',
+  },
+
+  cancelButtonText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  addButton: {
+    backgroundColor: '#1a1a1a',
+  },
+
+  addButtonDisabled: {
+    opacity: 0.5,
+  },
+
+  addButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 })
