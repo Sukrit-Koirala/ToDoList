@@ -59,7 +59,7 @@ const ToDoScreen = () => {
   const { theme, switchTheme} = useTheme();
 
   useEffect(() => {
-    switchTheme('pink');
+    switchTheme('purple');
   }, []); 
 
   return (

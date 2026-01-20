@@ -1,13 +1,14 @@
-import { StyleSheet, Text, View, Pressable } from 'react-native'
+import { StyleSheet, Text, View, Pressable, Dimensions } from 'react-native'
 import React from 'react'
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  runOnJS,
 } from 'react-native-reanimated'
+import { PanGestureHandler, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler'
 import { useTheme } from '../../../hooks/useTheme'
 import RoundedRectangle from '../RoundedRectangle/RoundedRectangle'
-import { useQueryClient } from '@tanstack/react-query'
 
 interface TaskItemProps {
   index: number
@@ -17,7 +18,11 @@ interface TaskItemProps {
   duration?: string
   location?: string
   onToggle: () => void
+  onDelete: () => void
 }
+
+const SCREEN_WIDTH = Dimensions.get('window').width
+const SWIPE_THRESHOLD = -100
 
 const TaskItem: React.FC<TaskItemProps> = ({
   index,
@@ -27,13 +32,15 @@ const TaskItem: React.FC<TaskItemProps> = ({
   duration,
   location,
   onToggle,
+  onDelete,
 }) => {
   const { theme } = useTheme()
   const scale = useSharedValue(1)
-  const queryClient = useQueryClient() 
+  const translateX = useSharedValue(0)
 
+  // Animated styles
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [{ translateX: translateX.value }, { scale: scale.value }],
   }))
 
   const handlePress = () => {
@@ -43,86 +50,89 @@ const TaskItem: React.FC<TaskItemProps> = ({
     onToggle()
   }
 
+  // Gesture handling
+  const onGestureEvent = (event: PanGestureHandlerGestureEvent) => {
+    translateX.value = event.nativeEvent.translationX
+  }
+
+  const onGestureEnd = () => {
+    if (translateX.value < SWIPE_THRESHOLD) {
+      // Swipe passed threshold → delete
+      translateX.value = withTiming(-SCREEN_WIDTH, { duration: 200 }, () => {
+        runOnJS(onDelete)()
+      })
+    } else {
+      // Snap back
+      translateX.value = withTiming(0)
+    }
+  }
+
   return (
-    <Pressable onPress={handlePress}>
+    <PanGestureHandler onGestureEvent={onGestureEvent} onEnded={onGestureEnd}>
       <Animated.View style={animatedStyle}>
-        <RoundedRectangle
-          radius={16}
-          style={[
-            styles.card,
-            {
-              backgroundColor: completed ? theme.background : '#FFFFFF',
-              opacity: completed ? 0.4 : 1,
-            },
-          ]}
-        >
-          <View style={styles.row}>
-            {/* NUMBER BADGE */}
-            <View
-              style={[
-                styles.badge,
-                {
-                  backgroundColor: completed ? '#1a1a1a' : '#F0F0F0',
-                },
-              ]}
-            >
-              <Text
+        <Pressable onPress={handlePress}>
+          <RoundedRectangle
+            radius={16}
+            style={[
+              styles.card,
+              {
+                backgroundColor: completed ? theme.background : '#FFFFFF',
+                opacity: completed ? 0.4 : 1,
+              },
+            ]}
+          >
+            <View style={styles.row}>
+              {/* NUMBER BADGE */}
+              <View
                 style={[
-                  styles.badgeText,
-                  {
-                    color: completed ? '#FFFFFF' : '#1a1a1a',
-                  },
+                  styles.badge,
+                  { backgroundColor: completed ? '#1a1a1a' : '#F0F0F0' },
                 ]}
               >
-                {index}
-              </Text>
-            </View>
-
-            {/* CONTENT */}
-            <View style={styles.content}>
-              <View style={styles.titleRow}>
                 <Text
                   style={[
-                    styles.title,
-                    {
-                      textDecorationLine: completed
-                        ? 'line-through'
-                        : 'none',
-                    },
+                    styles.badgeText,
+                    { color: completed ? '#FFFFFF' : '#1a1a1a' },
                   ]}
-                  numberOfLines={1}
                 >
-                  {title}
+                  {index}
                 </Text>
-                {time && (
-                  <Text style={styles.time}>{time}</Text>
-                )}
               </View>
 
-              {(duration || location) && (
-                <View style={styles.metaRow}>
-                  {duration && (
-                    <Text style={styles.meta}>{duration}</Text>
-                  )}
-                  {duration && location && (
-                    <Text style={styles.metaDot}>•</Text>
-                  )}
-                  {location && (
-                    <Text style={styles.meta}>{location}</Text>
-                  )}
+              {/* CONTENT */}
+              <View style={styles.content}>
+                <View style={styles.titleRow}>
+                  <Text
+                    style={[
+                      styles.title,
+                      { textDecorationLine: completed ? 'line-through' : 'none' },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {title}
+                  </Text>
+                  {time && <Text style={styles.time}>{time}</Text>}
                 </View>
-              )}
+
+                {(duration || location) && (
+                  <View style={styles.metaRow}>
+                    {duration && <Text style={styles.meta}>{duration}</Text>}
+                    {duration && location && <Text style={styles.metaDot}>•</Text>}
+                    {location && <Text style={styles.meta}>{location}</Text>}
+                  </View>
+                )}
+              </View>
             </View>
-          </View>
-        </RoundedRectangle>
+          </RoundedRectangle>
+        </Pressable>
       </Animated.View>
-    </Pressable>
+    </PanGestureHandler>
   )
 }
 
 export default TaskItem
 
-const taskStyles = StyleSheet.create({
+const styles = StyleSheet.create({
   card: {
     paddingVertical: 16,
     paddingHorizontal: 16,
@@ -169,7 +179,7 @@ const taskStyles = StyleSheet.create({
     color: '#1a1a1a',
     flex: 1,
     marginRight: 12,
-    marginTop:5,
+    marginTop: 5,
   },
 
   time: {
@@ -194,5 +204,3 @@ const taskStyles = StyleSheet.create({
     color: '#888',
   },
 })
-
-const styles = taskStyles

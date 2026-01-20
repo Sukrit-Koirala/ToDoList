@@ -9,7 +9,7 @@ import {
 } from 'react-native'
 import { BottomSheetScrollView, BottomSheetModal, BottomSheetBackdrop } from '@gorhom/bottom-sheet'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getTodos, toggleTodo, addTodo, TodoGroup } from '../../../api/todos'
+import { getTodos, toggleTodo, addTodo, TodoGroup, deleteTodo } from '../../../api/todos'
 import { useTheme } from '../../../hooks/useTheme'
 import RoundedRectangle from '../RoundedRectangle/RoundedRectangle'
 import TaskItem from './TaskModalCard'
@@ -39,7 +39,7 @@ const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
   
   // Add task bottom sheet ref
   const addTaskSheetRef = useRef<BottomSheetModal>(null)
-  const snapPoints = useMemo(() => ['40%'], [])
+
 
   const { data: todos = [], isLoading } = useQuery({
     queryKey: ['todos'],
@@ -66,6 +66,16 @@ const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
     },
   })
 
+  const deleteMutation = useMutation({
+    mutationFn: (taskId: string) => deleteTodo(taskId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['todos'] })
+    },
+    onError: (error) => {
+      console.error('Failed to delete task:', error)
+    }
+  })
+
   const groupTodos = todos.filter(
     (todo: any) => todo.groupId === group.id
   )
@@ -75,15 +85,6 @@ const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
       addMutation.mutate(newTaskTitle.trim())
     }
   }
-
-  const renderBackdrop = (props: any) => (
-    <BottomSheetBackdrop
-      {...props}
-      disappearsOnIndex={-1}
-      appearsOnIndex={0}
-      opacity={0.5}
-    />
-  )
 
   return (
     <View style={[styles.container, { backgroundColor: cardColor }]}>
@@ -130,7 +131,8 @@ const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
                 duration={task.duration}
                 location={task.location}
                 onToggle={() => toggleMutation.mutate(task.id)}
-              />
+                onDelete={() => deleteMutation.mutate(task.id)}    
+                />
             ))
           ) : (
             <Text style={styles.emptyText}>No tasks yet</Text>
