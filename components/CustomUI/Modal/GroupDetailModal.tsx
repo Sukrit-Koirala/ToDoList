@@ -1,21 +1,21 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useMemo } from 'react'
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  Modal,
   TextInput,
-  KeyboardAvoidingView,
   Platform,
 } from 'react-native'
-import { BottomSheetScrollView } from '@gorhom/bottom-sheet'
+import { BottomSheetScrollView, BottomSheetModal, BottomSheetBackdrop } from '@gorhom/bottom-sheet'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getTodos, toggleTodo, addTodo, TodoGroup } from '../../../api/todos'
 import { useTheme } from '../../../hooks/useTheme'
 import RoundedRectangle from '../RoundedRectangle/RoundedRectangle'
 import TaskItem from './TaskModalCard'
 import { Ionicons } from '@expo/vector-icons'
+import AddTaskBottomSheet from './AddTaskModal'
+
 
 interface GroupDetailModalProps {
   group: {
@@ -35,8 +35,11 @@ const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
 }) => {
   const { theme } = useTheme()
   const queryClient = useQueryClient()
-  const [showAddModal, setShowAddModal] = useState(false)
   const [newTaskTitle, setNewTaskTitle] = useState('')
+  
+  // Add task bottom sheet ref
+  const addTaskSheetRef = useRef<BottomSheetModal>(null)
+  const snapPoints = useMemo(() => ['40%'], [])
 
   const { data: todos = [], isLoading } = useQuery({
     queryKey: ['todos'],
@@ -59,7 +62,7 @@ const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['todos'] })
       setNewTaskTitle('')
-      setShowAddModal(false)
+      addTaskSheetRef.current?.dismiss()
     },
   })
 
@@ -72,6 +75,15 @@ const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
       addMutation.mutate(newTaskTitle.trim())
     }
   }
+
+  const renderBackdrop = (props: any) => (
+    <BottomSheetBackdrop
+      {...props}
+      disappearsOnIndex={-1}
+      appearsOnIndex={0}
+      opacity={0.5}
+    />
+  )
 
   return (
     <View style={[styles.container, { backgroundColor: cardColor }]}>
@@ -129,7 +141,7 @@ const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
       {/* BOTTOM ACTION */}
       {onClose && (
         <TouchableOpacity
-          onPress={() => setShowAddModal(true)}
+          onPress={() => addTaskSheetRef.current?.present()}
           style={[styles.quickAddButton, { backgroundColor: cardColor || '#101010' }]}
         >
           <Text style={styles.quickAddIcon}>+</Text>
@@ -137,67 +149,16 @@ const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
         </TouchableOpacity>
       )}
 
-      {/* ADD TASK MODAL */}
-      <Modal
-        visible={showAddModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowAddModal(false)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalOverlay}
-        >
-          <TouchableOpacity
-            activeOpacity={1}
-            style={styles.modalOverlay}
-            onPress={() => setShowAddModal(false)}
-          >
-            <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
-              <View style={styles.addModalContent}>
-                <Text style={styles.addModalTitle}>Add New Task</Text>
-                
-                <TextInput
-                  style={styles.input}
-                  placeholder="Task title..."
-                  placeholderTextColor="#999"
-                  value={newTaskTitle}
-                  onChangeText={setNewTaskTitle}
-                  autoFocus
-                  onSubmitEditing={handleAddTask}
-                />
+      {/* ---- ADD TASK MODAL COMPONENT ---- */}
+      <AddTaskBottomSheet
+        sheetRef={addTaskSheetRef}
+        value={newTaskTitle}
+        onChangeText={setNewTaskTitle}
+        onAdd={handleAddTask}
+        onCancel={() => addTaskSheetRef.current?.dismiss()}
+        accentColor={cardColor}
+      />
 
-                <View style={styles.modalButtons}>
-                  <TouchableOpacity
-                    style={[styles.modalButton, styles.cancelButton]}
-                    onPress={() => {
-                      setNewTaskTitle('')
-                      setShowAddModal(false)
-                    }}
-                  >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[
-                      styles.modalButton,
-                      styles.addButton,
-                      { backgroundColor: cardColor || '#101010' },
-                      !newTaskTitle.trim() && styles.addButtonDisabled
-                    ]}
-                    onPress={handleAddTask}
-                    disabled={!newTaskTitle.trim() || addMutation.isPending}
-                  >
-                    <Text style={styles.addButtonText}>
-                      {addMutation.isPending ? 'Adding...' : 'Add Task'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </KeyboardAvoidingView>
-      </Modal>
     </View>
   )
 }
@@ -270,7 +231,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5F5F5',
     marginTop: -21,
-    paddingTop:8,
+    paddingTop: 8,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
   },
@@ -278,6 +239,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     paddingHorizontal: 24,
     paddingBottom: 100,
+      flexGrow: 1,
   },
 
   emptyText: {
@@ -317,23 +279,9 @@ const styles = StyleSheet.create({
   },
 
   // Add Modal Styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
   addModalContent: {
-    backgroundColor: 'white',
-    borderRadius: 20,
+    flex: 1,
     padding: 24,
-    width: 320,
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 8,
   },
 
   addModalTitle: {
