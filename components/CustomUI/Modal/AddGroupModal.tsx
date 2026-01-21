@@ -15,23 +15,26 @@ import {
 
 interface Props {
   sheetRef: React.RefObject<BottomSheetModal | null>
-  value: string
-  onChangeText: (text: string) => void
-  onAdd: () => void
+  onAdd: (name: string) => void
   onCancel: () => void
   accentColor: string
 }
 
 const AddGroupModal: React.FC<Props> = ({
   sheetRef,
-  value,
-  onChangeText,
   onAdd,
   onCancel,
   accentColor,
 }) => {
   const snapPoints = useMemo(() => ['80%'], [])
   const inputRef = React.useRef<TextInput>(null)
+  const [value, setValue] = React.useState('')
+  const handleClose = () => {
+  setValue('')
+  onCancel()
+  }
+
+
 
   const renderBackdrop = (props: any) => (
     <BottomSheetBackdrop
@@ -70,10 +73,11 @@ const AddGroupModal: React.FC<Props> = ({
           style={styles.input}
           placeholder="Board name..."
           value={value}
-          onChangeText={onChangeText}
+          onChangeText={setValue}
           returnKeyType="done"
-          onSubmitEditing={onAdd}
+          onSubmitEditing={() => value.trim() && onAdd(value)}
         />
+
 
         <View style={styles.buttons}>
           <TouchableOpacity
@@ -83,17 +87,25 @@ const AddGroupModal: React.FC<Props> = ({
             <Text style={styles.cancelText}>Cancel</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[
-              styles.button,
-              { backgroundColor: accentColor },
-              !value.trim() && styles.disabled,
-            ]}
-            disabled={!value.trim()}
-            onPress={onAdd}
-          >
-            <Text style={styles.addText}>Add Board</Text>
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, styles.cancel]}
+          onPress={handleClose}
+        >
+          <Text style={styles.cancelText}>Cancel</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.button,
+            { backgroundColor: accentColor },
+            !value.trim() && styles.disabled,
+          ]}
+          disabled={!value.trim()}
+          onPress={() => onAdd(value)}
+        >
+          <Text style={styles.addText}>Add Board</Text>
+        </TouchableOpacity>
+
         </View>
       </BottomSheetScrollView>
     </BottomSheetModal>

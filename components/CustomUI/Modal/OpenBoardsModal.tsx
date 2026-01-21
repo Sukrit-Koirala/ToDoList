@@ -115,16 +115,13 @@ export default function OpenBoardsModal({ sheetRef, snapPoints, onClose, renderB
             <Ionicons name="add" size={22} color="#fff" />
             <Text style={styles.fabText}>Quick Add</Text>
           </TouchableOpacity>
-          
+                    
           <AddGroupModal
             sheetRef={addGroupSheetRef}
-            value={newGroupName}
-            onChangeText={setNewGroupName}
-            onAdd={handleAddGroup}
+            onAdd={(name) => addGroupMutation.mutate(name)}
             onCancel={() => addGroupSheetRef.current?.dismiss()}
             accentColor={theme.background}
           />
-
         </View>
       </View>
     </BottomSheetModal>
