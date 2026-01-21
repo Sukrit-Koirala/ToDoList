@@ -1,6 +1,5 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { ToDoProvider } from '../../contexts/ToDoContext/ToDoProvider';
 import AddTabButton from '../../components/CustomUI/AddTabButton/AddTabButton';
 import { useTheme } from '../../hooks/useTheme';
 import { ModalProvider } from '../../components/CustomUI/Modal/ModalProvider';
@@ -13,7 +12,6 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
-        <ToDoProvider>
           {/* ModalProvider wraps EVERYTHING including Tabs */}
           <ModalProvider>
             <Tabs
@@ -101,7 +99,6 @@ export default function RootLayout() {
               />
             </Tabs>
           </ModalProvider>
-        </ToDoProvider>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );

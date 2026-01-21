@@ -1,13 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { DEFAULT_TODOS } from '../data/defaultTodos'
-import { TodoType, TodoGroup, Todo } from '../types/todos'
+import {
+  Todo,
+  Priority,
+  ScheduleType,
+} from '../types/todos'
 
-// Remove the enum and interface definitions (now imported)
-// Export them so existing imports still work
-export { TodoType, TodoGroup, Todo } from '../types/todos'
-export type { Group } from '../types/todos'
+export type { Todo } from '../types/todos'
+export type {Group} from "../types/todos"
 
-const TODO_KEY = 'TODOS_V2'
+const TODO_KEY = 'TODOS_V4'
 
 /* ---------- Internal Helpers ---------- */
 
@@ -33,10 +35,7 @@ export const getTodos = async (): Promise<Todo[]> => {
 
   // FIRST LAUNCH → seed defaults
   if (!raw) {
-    await AsyncStorage.setItem(
-      TODO_KEY,
-      JSON.stringify(DEFAULT_TODOS)
-    )
+    await writeTodos(DEFAULT_TODOS)
     return DEFAULT_TODOS
   }
 
@@ -45,38 +44,119 @@ export const getTodos = async (): Promise<Todo[]> => {
 
 export const addTodo = async (params: {
   title: string
-  typeId?: TodoType
-  groupId?: TodoGroup
+  groupId: string
+  description?: string
+  priority?: Priority
 }): Promise<Todo> => {
   const todos = await readTodos()
 
   const newTodo: Todo = {
     id: Date.now().toString(),
     title: params.title,
+    description: params.description,
     completed: false,
-    typeId: params.typeId ?? TodoType.TASK,
-    groupId: params.groupId ?? TodoGroup.PERSONAL,
+
+    groupId: params.groupId,
+
+    priority: params.priority ?? Priority.NONE,
+
+    scheduleType: ScheduleType.NONE,
+
+    createdAt: new Date().toISOString(),
   }
 
   await writeTodos([newTodo, ...todos])
   return newTodo
 }
 
-export const toggleTodo = async (id: string) => {
+/* ---------- Scheduling ---------- */
+
+export const scheduleTodoForDay = async (
+  id: string,
+  dueDate: string // ISO date (YYYY-MM-DD)
+) => {
   const todos = await readTodos()
 
   const updated = todos.map(todo =>
     todo.id === id
-      ? { ...todo, completed: !todo.completed }
+      ? {
+          ...todo,
+          scheduleType: ScheduleType.DAY,
+          dueDate,
+          startTime: undefined,
+          endTime: undefined,
+        }
       : todo
   )
 
   await writeTodos(updated)
 }
 
+export const scheduleTodoWithTime = async (
+  id: string,
+  startTime?: string,
+  endTime?: string
+) => {
+  const todos = await readTodos()
+
+  const updated = todos.map(todo =>
+    todo.id === id
+      ? {
+          ...todo,
+          scheduleType: ScheduleType.TIME,
+          startTime,
+          endTime,
+          dueDate: undefined,
+        }
+      : todo
+  )
+
+  await writeTodos(updated)
+}
+
+export const unscheduleTodo = async (id: string) => {
+  const todos = await readTodos()
+
+  const updated = todos.map(todo =>
+    todo.id === id
+      ? {
+          ...todo,
+          scheduleType: ScheduleType.NONE,
+          startTime: undefined,
+          endTime: undefined,
+          dueDate: undefined,
+        }
+      : todo
+  )
+
+  await writeTodos(updated)
+}
+
+/* ---------- Completion ---------- */
+
+export const toggleTodo = async (id: string) => {
+  const todos = await readTodos()
+
+  const updated = todos.map(todo =>
+    todo.id === id
+      ? {
+          ...todo,
+          completed: !todo.completed,
+          completedAt: !todo.completed
+            ? new Date().toISOString()
+            : undefined,
+        }
+      : todo
+  )
+
+  await writeTodos(updated)
+}
+
+/* ---------- Update / Delete ---------- */
+
 export const updateTodo = async (
   id: string,
-  updates: Partial<Omit<Todo, 'id'>>
+  updates: Partial<Omit<Todo, 'id' | 'createdAt'>>
 ) => {
   const todos = await readTodos()
 

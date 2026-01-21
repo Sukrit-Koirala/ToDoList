@@ -43,8 +43,8 @@ export default function OpenBoardsModal({ sheetRef, snapPoints, onClose, renderB
 
   const addGroupMutation = useMutation({
     mutationFn: (name: string) => addGroup({
-      id: name.trim().toUpperCase().replace(/\s+/g, '_'),
-      name: name.trim(),
+      name: name.trim(),         // just the name
+      type: 'normal',            // optional, defaults to 'normal'
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] })
@@ -52,6 +52,7 @@ export default function OpenBoardsModal({ sheetRef, snapPoints, onClose, renderB
       addGroupSheetRef.current?.dismiss()
     },
   })
+
 
   const handleAddGroup = () => {
     if (newGroupName.trim()) {

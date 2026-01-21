@@ -4,22 +4,21 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
   Platform,
 } from 'react-native'
 import { BottomSheetScrollView, BottomSheetModal, BottomSheetBackdrop } from '@gorhom/bottom-sheet'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getTodos, toggleTodo, addTodo, TodoGroup, deleteTodo } from '../../../api/todos'
+import { getTodos, toggleTodo, addTodo, deleteTodo } from '../../../api/todos'
 import { useTheme } from '../../../hooks/useTheme'
+import { Priority } from '../../../types/todos'
 import RoundedRectangle from '../RoundedRectangle/RoundedRectangle'
 import TaskItem from './TaskModalCard'
 import { Ionicons } from '@expo/vector-icons'
 import AddTaskBottomSheet from './AddTaskModal'
 
-
 interface GroupDetailModalProps {
   group: {
-    id: TodoGroup
+    id: string
     name: string
     completed?: number
     total?: number
@@ -35,18 +34,18 @@ const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
 }) => {
   const { theme } = useTheme()
   const queryClient = useQueryClient()
-  const [newTaskTitle, setNewTaskTitle] = useState('')
-  
-  // Add task bottom sheet ref
   const addTaskSheetRef = useRef<BottomSheetModal>(null)
 
-
+  // Fetch todos for this group
   const { data: todos = [], isLoading } = useQuery({
-    queryKey: ['todos'],
-    queryFn: () => getTodos(),
-    select: (data) => data.filter((todo: any) => todo.groupId === group.id)
+    queryKey: ['todos', group.id],
+    queryFn: async () => {
+      const allTodos = await getTodos()
+      return allTodos.filter((todo: any) => todo.groupId === group.id)
+    },
   })
 
+  // Toggle todo completion
   const toggleMutation = useMutation({
     mutationFn: (todoId: string) => toggleTodo(todoId),
     onSuccess: () => {
@@ -54,18 +53,25 @@ const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
     },
   })
 
+  // Add new todo
   const addMutation = useMutation({
-    mutationFn: (title: string) => addTodo({
-      title,
+    mutationFn: (data: {
+      title: string
+      description?: string
+      priority: Priority
+    }) => addTodo({
+      title: data.title,
       groupId: group.id,
+      description: data.description,
+      priority: data.priority,
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['todos'] })
-      setNewTaskTitle('')
       addTaskSheetRef.current?.dismiss()
     },
   })
 
+  // Delete todo
   const deleteMutation = useMutation({
     mutationFn: (taskId: string) => deleteTodo(taskId),
     onSuccess: () => {
@@ -73,17 +79,15 @@ const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
     },
     onError: (error) => {
       console.error('Failed to delete task:', error)
-    }
+    },
   })
 
-  const groupTodos = todos.filter(
-    (todo: any) => todo.groupId === group.id
-  )
-
-  const handleAddTask = () => {
-    if (newTaskTitle.trim()) {
-      addMutation.mutate(newTaskTitle.trim())
-    }
+  const handleAddTask = (data: {
+    title: string
+    description?: string
+    priority: Priority
+  }) => {
+    addMutation.mutate(data)
   }
 
   return (
@@ -96,15 +100,17 @@ const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
 
         <View style={styles.headerTop}>
           <Text style={styles.title}>{group.name}</Text>
+          {todos.length > 0 && (
+            <Text style={styles.subtitle}>
+              {todos.filter((t: any) => t.completed).length} of {todos.length} completed
+            </Text>
+          )}
         </View>
       </View>
 
       {/* CONTENT CARD */}
       <View style={styles.cardBg}>
-        <RoundedRectangle
-          radius={28}
-          backgroundColor="#F5F5F5"
-        >
+        <RoundedRectangle radius={28} backgroundColor="#F5F5F5">
           <View style={styles.cardHeader}>
             <Text style={styles.cardTitle}>Tasks</Text>
             <TouchableOpacity>
@@ -112,16 +118,18 @@ const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
             </TouchableOpacity>
           </View>
         </RoundedRectangle>
-        
-        <BottomSheetScrollView 
+
+        <BottomSheetScrollView
           style={styles.scrollViewWrapper}
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
         >
           {isLoading ? (
-            <Text style={styles.emptyText}>Loading...</Text>
-          ) : groupTodos.length > 0 ? (
-            groupTodos.map((task: any, index: number) => (
+            <View style={styles.centerContent}>
+              <Text style={styles.emptyText}>Loading...</Text>
+            </View>
+          ) : todos.length > 0 ? (
+            todos.map((task: any, index: number) => (
               <TaskItem
                 key={task.id}
                 index={index + 1}
@@ -131,36 +139,39 @@ const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
                 duration={task.duration}
                 location={task.location}
                 onToggle={() => toggleMutation.mutate(task.id)}
-                onDelete={() => deleteMutation.mutate(task.id)}    
-                />
+                onDelete={() => deleteMutation.mutate(task.id)}
+              />
             ))
           ) : (
-            <Text style={styles.emptyText}>No tasks yet</Text>
+            <View style={styles.centerContent}>
+              <Text style={styles.emptyText}>No tasks yet</Text>
+              <Text style={styles.emptySubtext}>
+                Tap "Quick Add" below to create your first task
+              </Text>
+            </View>
           )}
         </BottomSheetScrollView>
       </View>
 
-      {/* BOTTOM ACTION */}
+      {/* QUICK ADD BUTTON */}
       {onClose && (
         <TouchableOpacity
           onPress={() => addTaskSheetRef.current?.present()}
-          style={[styles.quickAddButton, { backgroundColor: cardColor || '#101010' }]}
+          style={[styles.quickAddButton, { backgroundColor: cardColor }]}
         >
           <Text style={styles.quickAddIcon}>+</Text>
           <Text style={styles.quickAddText}>Quick Add</Text>
         </TouchableOpacity>
       )}
 
-      {/* ---- ADD TASK MODAL COMPONENT ---- */}
+      {/* ADD TASK BOTTOM SHEET */}
       <AddTaskBottomSheet
         sheetRef={addTaskSheetRef}
-        value={newTaskTitle}
-        onChangeText={setNewTaskTitle}
+        groupId={group.id}
+        accentColor={cardColor}
         onAdd={handleAddTask}
         onCancel={() => addTaskSheetRef.current?.dismiss()}
-        accentColor={cardColor}
       />
-
     </View>
   )
 }
@@ -200,6 +211,13 @@ const styles = StyleSheet.create({
     fontFamily: 'PlayFair',
   },
 
+  subtitle: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginTop: 4,
+  },
+
   cardBg: {
     flex: 1,
     marginHorizontal: 0,
@@ -213,14 +231,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 26,
     paddingTop: 24,
     paddingBottom: 16,
-    alignContent: 'center',
   },
 
   cardTitle: {
     fontSize: 17,
     fontWeight: '600',
     color: '#666',
-    paddingHorizontal: 0,
   },
 
   moreButton: {
@@ -241,14 +257,29 @@ const styles = StyleSheet.create({
   scrollContainer: {
     paddingHorizontal: 24,
     paddingBottom: 100,
-      flexGrow: 1,
+    flexGrow: 1,
+  },
+
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
   },
 
   emptyText: {
     textAlign: 'center',
     color: '#999',
-    fontSize: 15,
-    marginTop: 40,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+
+  emptySubtext: {
+    textAlign: 'center',
+    color: '#bbb',
+    fontSize: 14,
+    marginTop: 8,
+    paddingHorizontal: 40,
   },
 
   quickAddButton: {
@@ -257,20 +288,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignSelf: 'center',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    height: 48,
+    paddingHorizontal: 20,
+    height: 52,
     borderRadius: 26,
     shadowColor: '#000',
     shadowOpacity: 0.25,
-    shadowRadius: 6,
+    shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
+    elevation: 8,
   },
 
   quickAddIcon: {
     color: '#FFFFFF',
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '600',
+    marginRight: 2,
   },
 
   quickAddText: {
@@ -278,65 +310,5 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
     marginLeft: 8,
-  },
-
-  // Add Modal Styles
-  addModalContent: {
-    flex: 1,
-    padding: 24,
-  },
-
-  addModalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 20,
-  },
-
-  modalButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-
-  modalButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-
-  cancelButton: {
-    backgroundColor: '#f0f0f0',
-  },
-
-  cancelButtonText: {
-    color: '#666',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-
-  addButton: {
-    backgroundColor: '#1a1a1a',
-  },
-
-  addButtonDisabled: {
-    opacity: 0.5,
-  },
-
-  addButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
   },
 })
