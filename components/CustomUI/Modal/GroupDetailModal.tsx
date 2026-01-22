@@ -10,7 +10,7 @@ import { BottomSheetScrollView, BottomSheetModal, BottomSheetBackdrop } from '@g
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getTodos, toggleTodo, addTodo, deleteTodo } from '../../../api/todos'
 import { useTheme } from '../../../hooks/useTheme'
-import { Priority } from '../../../types/todos'
+import { Priority, ScheduleType } from '../../../types/todos'
 import RoundedRectangle from '../RoundedRectangle/RoundedRectangle'
 import TaskItem from './TaskModalCard'
 import { Ionicons } from '@expo/vector-icons'
@@ -54,22 +54,30 @@ const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
   })
 
   // Add new todo
-  const addMutation = useMutation({
-    mutationFn: (data: {
-      title: string
-      description?: string
-      priority: Priority
-    }) => addTodo({
+const addMutation = useMutation({
+  mutationFn: (data: {
+    title: string
+    description?: string
+    priority: Priority
+    scheduleType: ScheduleType | undefined
+    startTime?: string
+    endTime?: string
+  }) =>
+    addTodo({
       title: data.title,
       groupId: group.id,
       description: data.description,
       priority: data.priority,
+      scheduleType: data.scheduleType,
+      startTime: data.startTime,
+      endTime: data.endTime,
     }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['todos'] })
-      addTaskSheetRef.current?.dismiss()
-    },
-  })
+
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['todos'] })
+    addTaskSheetRef.current?.dismiss()
+  },
+})
 
   // Delete todo
   const deleteMutation = useMutation({
@@ -83,12 +91,23 @@ const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
   })
 
   const handleAddTask = (data: {
-    title: string
-    description?: string
-    priority: Priority
-  }) => {
-    addMutation.mutate(data)
-  }
+  title: string
+  description?: string
+  priority: Priority
+
+  scheduleType: ScheduleType
+  startTime?: string
+  endTime?: string
+  dueDate?: string
+}) => {
+
+  console.log('[AddTask → handleAddTask]', data)
+
+  addMutation.mutate(data)
+}
+
+
+
 
   return (
     <View style={[styles.container, { backgroundColor: cardColor }]}>

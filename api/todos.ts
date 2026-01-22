@@ -47,8 +47,15 @@ export const addTodo = async (params: {
   groupId: string
   description?: string
   priority?: Priority
+
+  scheduleType?: ScheduleType | undefined
+  startTime?: string
+  endTime?: string
+  dueDate?: string
 }): Promise<Todo> => {
   const todos = await readTodos()
+
+  const scheduleType = params.scheduleType ?? ScheduleType.NONE
 
   const newTodo: Todo = {
     id: Date.now().toString(),
@@ -60,7 +67,24 @@ export const addTodo = async (params: {
 
     priority: params.priority ?? Priority.NONE,
 
-    scheduleType: ScheduleType.NONE,
+    scheduleType,
+
+    // DAY scheduling
+    dueDate:
+      scheduleType === ScheduleType.DAY
+        ? params.dueDate
+        : undefined,
+
+    // TIME scheduling
+    startTime:
+      scheduleType === ScheduleType.TIME
+        ? params.startTime
+        : undefined,
+
+    endTime:
+      scheduleType === ScheduleType.TIME
+        ? params.endTime
+        : undefined,
 
     createdAt: new Date().toISOString(),
   }
@@ -68,6 +92,7 @@ export const addTodo = async (params: {
   await writeTodos([newTodo, ...todos])
   return newTodo
 }
+
 
 /* ---------- Scheduling ---------- */
 

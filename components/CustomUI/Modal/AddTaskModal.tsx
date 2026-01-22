@@ -5,14 +5,15 @@ import {
   TouchableOpacity,
   View,
   StyleSheet,
-  ScrollView,
+  Platform,
 } from 'react-native'
 import {
   BottomSheetModal,
   BottomSheetScrollView,
   BottomSheetBackdrop,
 } from '@gorhom/bottom-sheet'
-import { Priority } from '../../../types/todos'
+import DateTimePicker from '@react-native-community/datetimepicker'
+import { Priority, ScheduleType } from '../../../types/todos'
 
 interface Props {
   sheetRef: React.RefObject<BottomSheetModal | null>
@@ -22,13 +23,15 @@ interface Props {
     title: string
     description?: string
     priority: Priority
+    scheduleType: ScheduleType
+    startTime?: string
+    endTime?: string
   }) => void
   onCancel: () => void
 }
 
 const AddTaskBottomSheet: React.FC<Props> = ({
   sheetRef,
-  groupId,
   accentColor,
   onAdd,
   onCancel,
@@ -36,6 +39,13 @@ const AddTaskBottomSheet: React.FC<Props> = ({
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [priority, setPriority] = useState<Priority>(Priority.NONE)
+
+  const [useTime, setUseTime] = useState(false)
+  const [startTime, setStartTime] = useState<Date | null>(null)
+  const [endTime, setEndTime] = useState<Date | null>(null)
+
+  const [showStartPicker, setShowStartPicker] = useState(false)
+  const [showEndPicker, setShowEndPicker] = useState(false)
 
   const snapPoints = useMemo(() => ['85%'], [])
 
@@ -48,6 +58,15 @@ const AddTaskBottomSheet: React.FC<Props> = ({
     />
   )
 
+  const resetForm = () => {
+    setTitle('')
+    setDescription('')
+    setPriority(Priority.NONE)
+    setUseTime(false)
+    setStartTime(null)
+    setEndTime(null)
+  }
+
   const handleAdd = () => {
     if (!title.trim()) return
 
@@ -55,25 +74,22 @@ const AddTaskBottomSheet: React.FC<Props> = ({
       title: title.trim(),
       description: description.trim() || undefined,
       priority,
+      scheduleType: useTime ? ScheduleType.TIME : ScheduleType.NONE,
+      startTime: useTime && startTime ? startTime.toISOString() : undefined,
+      endTime: useTime && endTime ? endTime.toISOString() : undefined,
     })
 
-    // Reset form
-    setTitle('')
-    setDescription('')
-    setPriority(Priority.NONE)
+    resetForm()
   }
 
   const handleCancel = () => {
-    setTitle('')
-    setDescription('')
-    setPriority(Priority.NONE)
+    resetForm()
     onCancel()
   }
 
   const priorityOptions = [
     { label: 'None', value: Priority.NONE },
     { label: 'Low', value: Priority.LOW },
-    { label: 'Medium', value: Priority.MEDIUM },
     { label: 'High', value: Priority.HIGH },
   ]
 
@@ -83,7 +99,6 @@ const AddTaskBottomSheet: React.FC<Props> = ({
       snapPoints={snapPoints}
       enablePanDownToClose
       keyboardBehavior="interactive"
-      keyboardBlurBehavior="restore"
       android_keyboardInputMode="adjustResize"
       backdropComponent={renderBackdrop}
       backgroundStyle={styles.sheetBackground}
@@ -95,7 +110,7 @@ const AddTaskBottomSheet: React.FC<Props> = ({
       >
         <Text style={styles.title}>Add New Task</Text>
 
-        {/* Title Input */}
+        {/* TITLE */}
         <View style={styles.section}>
           <Text style={styles.label}>Title *</Text>
           <TextInput
@@ -104,11 +119,10 @@ const AddTaskBottomSheet: React.FC<Props> = ({
             value={title}
             onChangeText={setTitle}
             autoFocus
-            returnKeyType="next"
           />
         </View>
 
-        {/* Description Input */}
+        {/* DESCRIPTION */}
         <View style={styles.section}>
           <Text style={styles.label}>Description (Optional)</Text>
           <TextInput
@@ -122,11 +136,11 @@ const AddTaskBottomSheet: React.FC<Props> = ({
           />
         </View>
 
-        {/* Priority Selector */}
+        {/* PRIORITY */}
         <View style={styles.section}>
           <Text style={styles.label}>Priority</Text>
           <View style={styles.priorityGrid}>
-            {priorityOptions.map((option) => (
+            {priorityOptions.map(option => (
               <TouchableOpacity
                 key={option.value}
                 style={[
@@ -151,7 +165,72 @@ const AddTaskBottomSheet: React.FC<Props> = ({
           </View>
         </View>
 
-        {/* Action Buttons */}
+        {/* TIME TOGGLE */}
+        <View style={styles.section}>
+          <TouchableOpacity
+            style={styles.timeToggle}
+            onPress={() => setUseTime(v => !v)}
+          >
+            <Text style={styles.label}>Add Time</Text>
+            <Text style={styles.toggleValue}>{useTime ? '✓' : ''}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* TIME PICKERS */}
+        {useTime && (
+          <View style={styles.section}>
+            <Text style={styles.label}>Start Time</Text>
+            <TouchableOpacity
+              style={styles.input}
+              onPress={() => setShowStartPicker(true)}
+            >
+              <Text>
+                {startTime
+                  ? startTime.toLocaleTimeString()
+                  : 'Select start time'}
+              </Text>
+            </TouchableOpacity>
+
+            <Text style={[styles.label, { marginTop: 12 }]}>
+              End Time (Optional)
+            </Text>
+            <TouchableOpacity
+              style={styles.input}
+              onPress={() => setShowEndPicker(true)}
+            >
+              <Text>
+                {endTime
+                  ? endTime.toLocaleTimeString()
+                  : 'Select end time'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* PICKERS */}
+        {showStartPicker && (
+          <DateTimePicker
+            mode="time"
+            value={startTime || new Date()}
+            onChange={(_, date) => {
+              setShowStartPicker(false)
+              if (date) setStartTime(date)
+            }}
+          />
+        )}
+
+        {showEndPicker && (
+          <DateTimePicker
+            mode="time"
+            value={endTime || new Date()}
+            onChange={(_, date) => {
+              setShowEndPicker(false)
+              if (date) setEndTime(date)
+            }}
+          />
+        )}
+
+        {/* ACTIONS */}
         <View style={styles.buttons}>
           <TouchableOpacity
             style={[styles.button, styles.cancel]}
@@ -179,7 +258,8 @@ const AddTaskBottomSheet: React.FC<Props> = ({
 
 export default AddTaskBottomSheet
 
-// ------------------- Styles -------------------
+// ---------------- STYLES ----------------
+
 const styles = StyleSheet.create({
   sheetBackground: { backgroundColor: 'white' },
   sheetHandle: { backgroundColor: '#ccc' },
@@ -194,7 +274,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
     marginBottom: 24,
-    color: '#1a1a1a',
   },
 
   section: {
@@ -204,7 +283,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
     marginBottom: 8,
   },
 
@@ -213,13 +291,11 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     borderRadius: 12,
     padding: 14,
-    fontSize: 16,
     backgroundColor: '#fafafa',
   },
 
   textArea: {
     minHeight: 100,
-    paddingTop: 14,
   },
 
   priorityGrid: {
@@ -230,12 +306,10 @@ const styles = StyleSheet.create({
   priorityChip: {
     flex: 1,
     paddingVertical: 10,
-    paddingHorizontal: 12,
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: '#ddd',
-    backgroundColor: '#fafafa',
     alignItems: 'center',
+    borderColor: '#ddd',
   },
 
   priorityText: {
@@ -248,10 +322,21 @@ const styles = StyleSheet.create({
     color: 'white',
   },
 
+  timeToggle: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  toggleValue: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+
   buttons: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 8,
+    marginTop: 12,
   },
 
   button: {
@@ -262,7 +347,7 @@ const styles = StyleSheet.create({
   },
 
   cancel: { backgroundColor: '#f0f0f0' },
-  cancelText: { color: '#666', fontWeight: '600', fontSize: 16 },
+  cancelText: { fontWeight: '600', fontSize: 16 },
 
   addText: { color: 'white', fontWeight: '600', fontSize: 16 },
 
