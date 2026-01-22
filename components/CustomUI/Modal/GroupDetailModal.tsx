@@ -188,6 +188,7 @@ const addMutation = useMutation({
         sheetRef={addTaskSheetRef}
         groupId={group.id}
         accentColor={cardColor}
+        existingTodos={todos} // Pass your todos array here
         onAdd={handleAddTask}
         onCancel={() => addTaskSheetRef.current?.dismiss()}
       />
