@@ -14,7 +14,7 @@ import { Priority, ScheduleType } from '../../../types/todos'
 import RoundedRectangle from '../RoundedRectangle/RoundedRectangle'
 import TaskItem from './TaskModalCard'
 import { Ionicons } from '@expo/vector-icons'
-import AddTaskBottomSheet from './AddTaskModal'
+import AddTaskBottomSheet from './AddTaskObject/AddTaskModal'
 
 interface GroupDetailModalProps {
   group: {
