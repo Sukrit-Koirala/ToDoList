@@ -32,18 +32,6 @@ const ToDoScreen = () => {
   queryFn: getGroups,
   })
 
-  //   useEffect(() => {
-  //   const clearStorage = async () => {
-  //     try {
-  //       await AsyncStorage.clear();  // ✅ Clears ALL data
-  //       console.log('AsyncStorage cleared');
-  //     } catch (error) {
-  //       console.error('Error clearing AsyncStorage:', error);
-  //     }
-  //   };
-
-  //   clearStorage();
-  // }, []); // Empty dependency array = runs once on mount
 
   const groupsWithStats = groups.map(group => {
   const groupTodos = todos.filter(todo => todo.groupId === group.id)
@@ -59,7 +47,7 @@ const ToDoScreen = () => {
   const { theme, switchTheme} = useTheme();
 
   useEffect(() => {
-    switchTheme('blue');
+    switchTheme('green');
   }, []); 
 
   return (
