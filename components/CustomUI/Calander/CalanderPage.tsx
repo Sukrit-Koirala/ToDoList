@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View, ActivityIndicator } from 'react-native'
-import React, { useMemo } from 'react'
+import { StyleSheet, Text, View, ActivityIndicator, Animated } from 'react-native'
+import React, { useMemo, useState, useRef, useEffect } from 'react'
 import TimeCard from './TimeArea'
 import { LinearGradient } from 'expo-linear-gradient'
 import CalendarHeader from './Header/CalanderHeader'
@@ -10,6 +10,8 @@ import { getTodos } from '../../../api/todos'
 
 const CalendarPage = () => {
   const { theme } = useTheme()
+  const [isExpanded, setIsExpanded] = useState(false)
+  const animatedValue = useRef(new Animated.Value(0)).current
 
   const { data: todos = [], isLoading } = useQuery({
     queryKey: ['todos'],
@@ -21,12 +23,26 @@ const CalendarPage = () => {
     return new Date().toLocaleString('en-US', { month: 'long' })
   }, [])
 
+  useEffect(() => {
+    Animated.spring(animatedValue, {
+      toValue: isExpanded ? 1 : 0,
+      useNativeDriver: false,
+      tension: 50,
+      friction: 7,
+    }).start()
+  }, [isExpanded])
+
+  const headerHeight = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [180, 520], // Collapsed: 180, Expanded: 520
+  })
+
   if (isLoading) {
     return (
       <LinearGradient
         colors={[theme.background, 'transparent']}
         start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 0.56 }}
+        end={{ x: 0, y: 0.99 }}
         style={styles.container}
       >
         <View style={styles.loadingContainer}>
@@ -40,22 +56,20 @@ const CalendarPage = () => {
     <LinearGradient
       colors={[theme.background, 'transparent']}
       start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 0.56 }}
+      end={{ x: 0, y: 0.99 }}
       style={styles.container}
     > 
-      <View style={styles.headerContainer}> 
+      <Animated.View style={[styles.headerContainer, { height: headerHeight }]}> 
         <View style={styles.monthRow}>
           <Text style={styles.monthText}>{currentMonth}</Text>
 
           <CalendarFAB
-            onPress={() => {
-              console.log('Add event')
-            }}
+            onPress={() => setIsExpanded(!isExpanded)}
             style={styles.fabStyle}
           />
         </View>
-        <CalendarHeader />
-      </View>
+        <CalendarHeader isExpanded={isExpanded} />
+      </Animated.View>
 
       <View style={styles.timeBlockContainer}>
         <TimeCard todos={todos} />
@@ -71,26 +85,25 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerContainer: {
-    flex: 0.25,
-    position: 'relative',
+    width: '100%',
   },
   timeBlockContainer: {
-    flex: 0.75,
+    flex: 1,
   },
   monthText: {
     left: 23,
-    zIndex: 10,
     fontSize: 26,
     color: '#fff',
     fontFamily: 'PlayFairBoldExtra',
   },
   monthRow: {
     position: 'absolute',
-    top: '28%',
+    top: 50,
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     zIndex: 10,
+    paddingHorizontal: 0,
   },
   fabStyle: {
     marginLeft: 12,
