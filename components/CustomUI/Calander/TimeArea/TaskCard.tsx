@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
-import RoundedRectangle from '../RoundedRectangle/RoundedRectangle'
+import RoundedRectangle from '../../RoundedRectangle/RoundedRectangle'
 import { Ionicons } from '@expo/vector-icons'
-import { getTaskIcon } from '../utils/taskIcons'
+import { getTaskIcon } from '../../utils/taskIcons'
 
 /* ---------- Types ---------- */
 interface TaskCardProps {
