@@ -1,7 +1,9 @@
 // themes.ts
+import { fadeToWhite } from "../components/CustomUI/utils/colorUtils"
 
 export const monoTheme = {
   background: '#101010',
+  fadedBackground: fadeToWhite('#101010'),
   header: '#555454',
   headerBackground: '#555454',
   headerText: '#ffffff',
@@ -28,6 +30,7 @@ export const monoTheme = {
 
 export const blueTheme = {
   background: '#93C7FF',
+  fadedBackground: fadeToWhite('#93C7FF'),
   header: '#5FA8F0',
   headerBackground: '#5FA8F0',
   headerText: '#06203A',
@@ -54,6 +57,7 @@ export const blueTheme = {
 
 export const greenTheme = {
   background: '#9FE3C0',
+  fadedBackground: fadeToWhite('#9FE3C0'),
   header: '#5FBF8F',
   headerBackground: '#5FBF8F',
   headerText: '#0B2F1F',
@@ -80,6 +84,7 @@ export const greenTheme = {
 
 export const pinkTheme = {
   background: '#FFB6D5',
+  fadedBackground: fadeToWhite('#FFB6D5'),
   header: '#F47FB2',
   headerBackground: '#F47FB2',
   headerText: '#3A0A1F',
@@ -106,6 +111,7 @@ export const pinkTheme = {
 
 export const orangeTheme = {
   background: '#FFC28A',
+  fadedBackground: fadeToWhite('#FFC28A'),
   header: '#F39C4A',
   headerBackground: '#F39C4A',
   headerText: '#3A1E0A',
@@ -132,6 +138,7 @@ export const orangeTheme = {
 
 export const purpleTheme = {
   background: '#C5B6FF',
+  fadedBackground: fadeToWhite('#C5B6FF'),
   header: '#8F7FE8',
   headerBackground: '#8F7FE8',
   headerText: '#1E0A3A',

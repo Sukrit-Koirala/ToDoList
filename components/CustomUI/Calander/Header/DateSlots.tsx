@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native'
 import React from 'react'
 import { useTheme } from '../../../../hooks/useTheme'
 
@@ -7,6 +7,8 @@ interface DateSlotsProps {
   date: number
   active?: boolean
   dimmed?: boolean
+  fullDate: Date
+  onPress: (date: Date) => void
 }
 
 const DateSlots: React.FC<DateSlotsProps> = ({
@@ -14,17 +16,24 @@ const DateSlots: React.FC<DateSlotsProps> = ({
   date,
   active = false,
   dimmed = false,
+  fullDate,
+  onPress,
 }) => {
   const {theme} = useTheme();
+  
   return (
-    <View style={[
-      styles.container, 
-      active && {backgroundColor: theme.headerBackground},
-      dimmed && styles.dimmed
-    ]}>
+    <TouchableOpacity 
+      onPress={() => onPress(fullDate)}
+      activeOpacity={0.7}
+      style={[
+        styles.container, 
+        active && {backgroundColor: theme.headerBackground, borderRadius: 18},
+        dimmed && styles.dimmed
+      ]}
+    >
       <Text style={[styles.day, dimmed && styles.dimmedText]}>{day}</Text>
       <Text style={[styles.date, dimmed && styles.dimmedText]}>{date}</Text>
-    </View>
+    </TouchableOpacity>
   )
 }
 
@@ -40,6 +49,7 @@ const styles = StyleSheet.create({
   },
   dimmed: {
     opacity: 0.3,
+    borderRadius: 18,
   },
   day: {
     fontSize: 11,

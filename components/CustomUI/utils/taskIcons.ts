@@ -28,3 +28,4 @@ export const getTaskIcon = (title: string): TaskIconName => {
   const firstWord = title.trim().split(' ')[0].toLowerCase()
   return ICON_MAP[firstWord] ?? 'checkbox'
 }
+

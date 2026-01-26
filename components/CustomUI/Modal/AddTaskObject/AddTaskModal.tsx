@@ -59,6 +59,8 @@ const AddTaskBottomSheet: React.FC<Props> = ({
     setDueDate,
     dueTime,
     setDueTime,
+    scheduledDate,
+    setScheduledDate,
     isSubmitting,
     timeConflictError,
     resetForm,
@@ -87,12 +89,14 @@ const AddTaskBottomSheet: React.FC<Props> = ({
     if (type !== ScheduleType.TIME) {
       setStartTime(null)
       setEndTime(null)
+      setScheduledDate(null) // NEW
     }
     if (type !== ScheduleType.DAY) {
       setDueDate(null)
       setDueTime(null)
     }
   }
+
 
   return (
     <BottomSheetModal
@@ -138,11 +142,13 @@ const AddTaskBottomSheet: React.FC<Props> = ({
           endTime={endTime}
           dueDate={dueDate}
           dueTime={dueTime}
+          scheduledDate={scheduledDate}
           timeConflictError={timeConflictError}
           onStartTimeChange={setStartTime}
           onEndTimeChange={setEndTime}
           onDueDateChange={setDueDate}
           onDueTimeChange={setDueTime}
+          onScheduledDateChange={setScheduledDate}
         />
 
         <TaskFormActions

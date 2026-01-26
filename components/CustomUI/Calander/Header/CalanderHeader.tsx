@@ -13,9 +13,15 @@ interface DateInfo {
 
 interface CalendarHeaderProps {
   isExpanded: boolean
+  selectedDate: Date
+  onDateSelect: (date: Date) => void
 }
 
-const CalendarHeader: React.FC<CalendarHeaderProps> = ({ isExpanded }) => {
+const CalendarHeader: React.FC<CalendarHeaderProps> = ({ 
+  isExpanded, 
+  selectedDate,
+  onDateSelect 
+}) => {
   const dateData = useMemo(() => {
     const today = new Date()
     const currentDay = today.getDay()
@@ -90,6 +96,10 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({ isExpanded }) => {
     }
   }, [isExpanded])
 
+  const isDateSelected = (date: Date) => {
+    return date.toDateString() === selectedDate.toDateString()
+  }
+
   return (
     <View style={styles.container}>
       <RoundedRectangle 
@@ -105,8 +115,10 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({ isExpanded }) => {
                   key={`${weekIndex}-${dateIndex}`}
                   day={dateInfo.day}
                   date={dateInfo.date}
-                  active={dateInfo.isToday}
+                  fullDate={dateInfo.fullDate}
+                  active={isDateSelected(dateInfo.fullDate)}
                   dimmed={isExpanded && !dateInfo.isCurrentMonth}
+                  onPress={onDateSelect}
                 />
               ))}
             </View>
@@ -122,14 +134,14 @@ export default CalendarHeader
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: 100,
+    marginTop: 90,
     paddingHorizontal: 16,
   },
   headerContainer: {
     flex: 1,
     width: '100%',
     paddingHorizontal: 4,
-    paddingVertical: 8,
+    paddingVertical: 12,
   },
   content: {
     flex: 1,

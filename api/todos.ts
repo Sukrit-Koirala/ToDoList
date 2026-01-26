@@ -28,6 +28,15 @@ const writeTodos = async (todos: Todo[]) => {
   await AsyncStorage.setItem(TODO_KEY, JSON.stringify(todos))
 }
 
+const getTodayDate = (): string => {
+  const today = new Date()
+  // FIX: Use local date components to avoid timezone issues
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 /* ---------- API Functions ---------- */
 
 export const getTodos = async (): Promise<Todo[]> => {
@@ -42,6 +51,24 @@ export const getTodos = async (): Promise<Todo[]> => {
   return JSON.parse(raw)
 }
 
+export const getTodosByDate = async (date: string): Promise<Todo[]> => {
+  const todos = await readTodos()
+  
+  return todos.filter(todo => {
+    // Filter for DAY schedule type with matching date
+    if (todo.scheduleType === ScheduleType.DAY && todo.dueDate === date) {
+      return true
+    }
+    
+    // Filter for TIME schedule type - check if it has a date associated
+    if (todo.scheduleType === ScheduleType.TIME && todo.scheduledDate === date) {
+      return true
+    }
+    
+    return false
+  })
+}
+
 export const addTodo = async (params: {
   title: string
   groupId: string
@@ -52,8 +79,12 @@ export const addTodo = async (params: {
   startTime?: string
   endTime?: string
   dueDate?: string
+  scheduledDate?: string
 }): Promise<Todo> => {
   const todos = await readTodos()
+
+  console.log('[addTodo] Received params:', params)
+  console.log('[addTodo] params.scheduledDate:', params.scheduledDate)
 
   const scheduleType = params.scheduleType ?? ScheduleType.NONE
 
@@ -69,13 +100,11 @@ export const addTodo = async (params: {
 
     scheduleType,
 
-    // DAY scheduling
     dueDate:
       scheduleType === ScheduleType.DAY
         ? params.dueDate
         : undefined,
 
-    // TIME scheduling
     startTime:
       scheduleType === ScheduleType.TIME
         ? params.startTime
@@ -86,13 +115,19 @@ export const addTodo = async (params: {
         ? params.endTime
         : undefined,
 
+    scheduledDate:
+      scheduleType === ScheduleType.TIME
+        ? params.scheduledDate ?? getTodayDate()
+        : undefined,
+
     createdAt: new Date().toISOString(),
   }
+
+  console.log('[addTodo] Created newTodo.scheduledDate:', newTodo.scheduledDate)
 
   await writeTodos([newTodo, ...todos])
   return newTodo
 }
-
 
 /* ---------- Scheduling ---------- */
 
@@ -110,6 +145,7 @@ export const scheduleTodoForDay = async (
           dueDate,
           startTime: undefined,
           endTime: undefined,
+          scheduledDate: undefined,
         }
       : todo
   )
@@ -120,15 +156,22 @@ export const scheduleTodoForDay = async (
 export const scheduleTodoWithTime = async (
   id: string,
   startTime?: string,
-  endTime?: string
+  endTime?: string,
+  scheduledDate?: string // Optional: defaults to today
 ) => {
   const todos = await readTodos()
+
+  // If startTime or endTime provided but no date, default to today
+  const finalScheduledDate = (startTime || endTime) 
+    ? scheduledDate ?? getTodayDate()
+    : undefined
 
   const updated = todos.map(todo =>
     todo.id === id
       ? {
           ...todo,
           scheduleType: ScheduleType.TIME,
+          scheduledDate: finalScheduledDate,
           startTime,
           endTime,
           dueDate: undefined,
@@ -150,6 +193,7 @@ export const unscheduleTodo = async (id: string) => {
           startTime: undefined,
           endTime: undefined,
           dueDate: undefined,
+          scheduledDate: undefined,
         }
       : todo
   )

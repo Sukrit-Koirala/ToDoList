@@ -34,6 +34,7 @@ export type Todo = {
   dueDate?: string        // ISO date (day-based)
   startTime?: string     // ISO datetime
   endTime?: string       // ISO datetime
+  scheduledDate?: string
 
   checklist?: ChecklistItem[]
 

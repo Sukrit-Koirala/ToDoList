@@ -18,6 +18,7 @@ const MINUTES_PER_HOUR = 60
 
 interface TimeCardProps {
   todos: Todo[]
+  selectedDate: Date
 }
 
 /* ---------- Helpers ---------- */
@@ -31,36 +32,112 @@ const convertMinutesToHour = (minutes: number) => {
   return minutes / MINUTES_PER_HOUR
 }
 
+const formatDateToYYYYMMDD = (date: Date): string => {
+  // Use local date components to avoid timezone issues
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 /* ---------- Component ---------- */
 
-const TimeCard: React.FC<TimeCardProps> = ({ todos }) => {
+const TimeContainer: React.FC<TimeCardProps> = ({ todos, selectedDate }) => {
   const { theme } = useTheme()
 
   const timedTodos = useMemo(() => {
-    return todos
-      .filter(
-        todo =>
-          todo.scheduleType === ScheduleType.TIME &&
-          todo.startTime &&
-          todo.endTime
-      )
-      .map(todo => {
-        const start = getMinutesSinceStart(todo.startTime!)
-        const end = getMinutesSinceStart(todo.endTime!)
-        const startMinute = start - DAY_START_MINUTES
+    const selectedDateStr = formatDateToYYYYMMDD(selectedDate)
+    
+    console.log('[TimeCard] Filtering for date:', selectedDateStr)
+    console.log('[TimeCard] All todos:', todos)
+    
+    const filtered = todos.filter(todo => {
+      // Must have TIME schedule type with start and end times
+      if (todo.scheduleType !== ScheduleType.TIME || !todo.startTime || !todo.endTime) {
+        return false
+      }
 
-        return {
-          id: todo.id,
-          title: todo.title,
-          description: todo.description,
-          startMinute,
-          startHour: convertMinutesToHour(startMinute),
-          durationMinutes: Math.max(end - start, 15),
-          active: !todo.completed,
-        }
+      // Check if scheduledDate matches selected date
+      if (todo.scheduledDate) {
+        const matches = todo.scheduledDate === selectedDateStr
+        console.log(`[TimeCard] "${todo.title}" scheduledDate=${todo.scheduledDate}, selected=${selectedDateStr}, matches=${matches}`)
+        return matches
+      }
+
+      // Fallback: if no scheduledDate, check if startTime date matches
+      const startTimeDate = new Date(todo.startTime)
+      const startDateStr = formatDateToYYYYMMDD(startTimeDate)
+      console.log(`[TimeCard] "${todo.title}" startTime date=${startDateStr}, selected=${selectedDateStr}`)
+      return startDateStr === selectedDateStr
+    })
+    
+    console.log('[TimeCard] Filtered todos count:', filtered.length)
+    
+    const mapped = filtered.map(todo => {
+      const start = getMinutesSinceStart(todo.startTime!)
+      const end = getMinutesSinceStart(todo.endTime!)
+      const startMinute = start - DAY_START_MINUTES
+      
+      // Handle end time that might be earlier than start (crossing midnight)
+      let duration = end - start
+      if (duration < 0) {
+        duration = (24 * 60) - start + end
+      }
+
+      console.log(`[TimeCard] "${todo.title}":`, {
+        startTime: todo.startTime,
+        endTime: todo.endTime,
+        localStart: new Date(todo.startTime!).toLocaleTimeString(),
+        localEnd: new Date(todo.endTime!).toLocaleTimeString(),
+        startMinutes: start,
+        endMinutes: end,
+        startMinute,
+        duration,
+        startHour: convertMinutesToHour(startMinute),
       })
-      .filter(task => task.startMinute >= 0) // Filter out tasks before 7 AM
-  }, [todos])
+
+      return {
+        id: todo.id,
+        title: todo.title,
+        description: todo.description,
+        startMinute,
+        startHour: convertMinutesToHour(startMinute),
+        durationMinutes: Math.max(duration, 15),
+        active: !todo.completed,
+      }
+    })
+    
+    const afterFilter = mapped.filter(task => {
+      const shouldShow = task.startMinute >= 0
+      if (!shouldShow) {
+        console.log(`[TimeCard] Filtering out task (before 7 AM): ${task.title}, startMinute=${task.startMinute}`)
+      }
+      return shouldShow
+    })
+    
+    console.log('[TimeCard] Final tasks to render:', afterFilter)
+    
+    return afterFilter
+  }, [todos, selectedDate])
+
+  const handlePositionChange = (taskId: string, newStartHour: number) => {
+    // Convert hour back to total minutes since midnight
+    const newStartMinutes = newStartHour * 60
+    const hours = Math.floor(newStartMinutes / 60) % 24
+    const minutes = newStartMinutes % 60
+    
+    console.log('[TimeContainer] Task position changed:', {
+      taskId,
+      newStartHour,
+      newStartMinutes,
+      newTime: `${hours}:${String(minutes).padStart(2, '0')}`,
+      formattedTime: `${hours > 12 ? hours - 12 : hours}:${String(minutes).padStart(2, '0')} ${hours >= 12 ? 'PM' : 'AM'}`,
+    })
+    
+    // TODO: Update the todo with new start/end times
+    // You'll want to call your update function here
+    // Example: updateTodo(taskId, { startTime: newStartTime, endTime: newEndTime })
+  }
 
   return (
     <ScrollView style={styles.scrollContainer}>
@@ -87,6 +164,7 @@ const TimeCard: React.FC<TimeCardProps> = ({ todos }) => {
                 description={task.description}
                 durationMinutes={task.durationMinutes}
                 active={task.active}
+                onPositionChange={(newHour) => handlePositionChange(task.id, newHour)}
               />
             ))}
           </View>
@@ -96,7 +174,7 @@ const TimeCard: React.FC<TimeCardProps> = ({ todos }) => {
   )
 }
 
-export default TimeCard
+export default TimeContainer
 
 const styles = StyleSheet.create({
   scrollContainer: {

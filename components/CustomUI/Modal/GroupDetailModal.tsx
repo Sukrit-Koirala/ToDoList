@@ -62,6 +62,8 @@ const addMutation = useMutation({
     scheduleType: ScheduleType | undefined
     startTime?: string
     endTime?: string
+    dueDate?: string
+    scheduledDate?: string  // ADD THIS
   }) =>
     addTodo({
       title: data.title,
@@ -71,6 +73,8 @@ const addMutation = useMutation({
       scheduleType: data.scheduleType,
       startTime: data.startTime,
       endTime: data.endTime,
+      dueDate: data.dueDate,
+      scheduledDate: data.scheduledDate,  // ADD THIS
     }),
 
   onSuccess: () => {
@@ -78,7 +82,6 @@ const addMutation = useMutation({
     addTaskSheetRef.current?.dismiss()
   },
 })
-
   // Delete todo
   const deleteMutation = useMutation({
     mutationFn: (taskId: string) => deleteTodo(taskId),
@@ -91,20 +94,18 @@ const addMutation = useMutation({
   })
 
   const handleAddTask = (data: {
-  title: string
-  description?: string
-  priority: Priority
-
-  scheduleType: ScheduleType
-  startTime?: string
-  endTime?: string
-  dueDate?: string
-}) => {
-
-  console.log('[AddTask → handleAddTask]', data)
-
-  addMutation.mutate(data)
-}
+    title: string
+    description?: string
+    priority: Priority
+    scheduleType: ScheduleType
+    startTime?: string
+    endTime?: string
+    dueDate?: string
+    scheduledDate?: string  // ADD THIS
+  }) => {
+    console.log('[AddTask → handleAddTask]', data)
+    addMutation.mutate(data)
+  }
 
 
 

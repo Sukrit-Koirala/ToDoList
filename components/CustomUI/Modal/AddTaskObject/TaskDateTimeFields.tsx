@@ -4,7 +4,6 @@ import DateTimePicker from '@react-native-community/datetimepicker'
 import { ScheduleType } from '../../../../types/todos'
 import { Ionicons } from '@expo/vector-icons'
 
-
 interface Props {
   scheduleType: ScheduleType
   accentColor: string
@@ -12,11 +11,13 @@ interface Props {
   endTime: Date | null
   dueDate: Date | null
   dueTime: Date | null
+  scheduledDate: Date | null // NEW
   timeConflictError: string | null
   onStartTimeChange: (date: Date | null) => void
   onEndTimeChange: (date: Date | null) => void
   onDueDateChange: (date: Date | null) => void
   onDueTimeChange: (date: Date | null) => void
+  onScheduledDateChange: (date: Date | null) => void // NEW
 }
 
 const TaskDateTimeFields: React.FC<Props> = ({
@@ -26,16 +27,19 @@ const TaskDateTimeFields: React.FC<Props> = ({
   endTime,
   dueDate,
   dueTime,
+  scheduledDate,
   timeConflictError,
   onStartTimeChange,
   onEndTimeChange,
   onDueDateChange,
   onDueTimeChange,
+  onScheduledDateChange,
 }) => {
   const [showStartPicker, setShowStartPicker] = useState(false)
   const [showEndPicker, setShowEndPicker] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [showDueTimePicker, setShowDueTimePicker] = useState(false)
+  const [showScheduledDatePicker, setShowScheduledDatePicker] = useState(false) // NEW
 
   if (scheduleType === ScheduleType.NONE) {
     return null
@@ -94,10 +98,35 @@ const TaskDateTimeFields: React.FC<Props> = ({
         <>
           {timeConflictError && (
             <View style={styles.errorContainer}>
-              <Text style={styles.errorText}><Ionicons name="warning-outline" size={18} color="#991B1B" />
-               {timeConflictError}</Text>
+              <Text style={styles.errorText}>
+                <Ionicons name="warning-outline" size={18} color="#991B1B" />
+                {' '}{timeConflictError}
+              </Text>
             </View>
           )}
+
+          {/* NEW: Scheduled Date field */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>
+              Date <Text style={styles.optionalText}>(Defaults to today)</Text>
+            </Text>
+            <TouchableOpacity
+              style={styles.inputContainer}
+              onPress={() => setShowScheduledDatePicker(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={scheduledDate ? [styles.inputValue, { color: accentColor }] : styles.inputPlaceholder}>
+                {scheduledDate
+                  ? scheduledDate.toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric',
+                      year: 'numeric'
+                    })
+                  : 'Today'}
+              </Text>
+              <Ionicons name="calendar-outline" size={20} color="#9CA3AF" />
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>Start Time</Text>
@@ -115,7 +144,6 @@ const TaskDateTimeFields: React.FC<Props> = ({
                   : 'Set start time'}
               </Text>
               <Ionicons name="time-outline" size={20} color="#9CA3AF" />
-
             </TouchableOpacity>
           </View>
 
@@ -161,6 +189,18 @@ const TaskDateTimeFields: React.FC<Props> = ({
           onChange={(_, date) => {
             setShowDueTimePicker(false)
             if (date) onDueTimeChange(date)
+          }}
+        />
+      )}
+
+      {/* NEW: Scheduled Date Picker */}
+      {showScheduledDatePicker && (
+        <DateTimePicker
+          mode="date"
+          value={scheduledDate || new Date()}
+          onChange={(_, date) => {
+            setShowScheduledDatePicker(false)
+            if (date) onScheduledDateChange(date)
           }}
         />
       )}
@@ -215,7 +255,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    
   },
   inputValue: {
     fontSize: 18,

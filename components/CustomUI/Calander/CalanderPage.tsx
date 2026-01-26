@@ -6,22 +6,33 @@ import CalendarHeader from './Header/CalanderHeader'
 import CalendarFAB from './Header/FAB_Calander'
 import { useTheme } from '../../../hooks/useTheme'
 import { useQuery } from '@tanstack/react-query'
-import { getTodos } from '../../../api/todos'
+import { getTodosByDate } from '../../../api/todos'
+import TimeContainer from './TimeArea'
 
 const CalendarPage = () => {
   const { theme } = useTheme()
   const [isExpanded, setIsExpanded] = useState(false)
+  const [selectedDate, setSelectedDate] = useState(new Date())
   const animatedValue = useRef(new Animated.Value(0)).current
 
-  const { data: todos = [], isLoading } = useQuery({
-    queryKey: ['todos'],
-    queryFn: getTodos,
-  })
+  // Format date as YYYY-MM-DD for the API
+  const formattedDate = useMemo(() => {
+    return selectedDate.toISOString().split('T')[0]
+  }, [selectedDate])
+
+const { data: todos = [], isLoading } = useQuery({
+  queryKey: ['todos', formattedDate],
+  queryFn: async () => {
+    const result = await getTodosByDate(formattedDate)
+    console.log('getTodosByDate result for', formattedDate, ':', result)
+    return result
+  },
+})
 
   // Get current month dynamically
   const currentMonth = useMemo(() => {
-    return new Date().toLocaleString('en-US', { month: 'long' })
-  }, [])
+    return selectedDate.toLocaleString('en-US', { month: 'long' })
+  }, [selectedDate])
 
   useEffect(() => {
     Animated.spring(animatedValue, {
@@ -37,12 +48,18 @@ const CalendarPage = () => {
     outputRange: [180, 520], // Collapsed: 180, Expanded: 520
   })
 
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date)
+  }
+
+  
+
   if (isLoading) {
     return (
       <LinearGradient
-        colors={[theme.background, 'transparent']}
+        colors={[theme.background, theme.background]}
         start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 0.99 }}
+        end={{ x: 0, y: 0.9 }}
         style={styles.container}
       >
         <View style={styles.loadingContainer}>
@@ -54,9 +71,9 @@ const CalendarPage = () => {
 
   return (
     <LinearGradient
-      colors={[theme.background, 'transparent']}
+      colors={[theme.background, theme.fadedBackground]}
       start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 0.99 }}
+      end={{ x: 0, y: 0.9 }}
       style={styles.container}
     > 
       <Animated.View style={[styles.headerContainer, { height: headerHeight }]}> 
@@ -68,12 +85,16 @@ const CalendarPage = () => {
             style={styles.fabStyle}
           />
         </View>
-        <CalendarHeader isExpanded={isExpanded} />
+        <CalendarHeader 
+          isExpanded={isExpanded} 
+          selectedDate={selectedDate}
+          onDateSelect={handleDateSelect}
+        />
       </Animated.View>
 
-      <View style={styles.timeBlockContainer}>
-        <TimeCard todos={todos} />
-      </View>
+    <View style={styles.timeBlockContainer}>
+      <TimeContainer todos={todos} selectedDate={selectedDate} />
+    </View>
     </LinearGradient>
   )
 }
