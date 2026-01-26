@@ -5,6 +5,7 @@ import TimeSlot from './TimeSlot'
 import TaskCard from './TaskCard'
 import { useTheme } from '../../../hooks/useTheme'
 import { Todo, ScheduleType } from '../../../types/todos'
+import { useUpdateTodo } from '../../../hooks/useTodoMutations' // Import the hook
 
 const HOURS = [
   '7 AM', '8 AM', '9 AM', '10 AM', '11 AM', '12 PM',
@@ -33,7 +34,6 @@ const convertMinutesToHour = (minutes: number) => {
 }
 
 const formatDateToYYYYMMDD = (date: Date): string => {
-  // Use local date components to avoid timezone issues
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
@@ -44,6 +44,7 @@ const formatDateToYYYYMMDD = (date: Date): string => {
 
 const TimeContainer: React.FC<TimeCardProps> = ({ todos, selectedDate }) => {
   const { theme } = useTheme()
+  const updateTodoMutation = useUpdateTodo() // Use the mutation hook
 
   const timedTodos = useMemo(() => {
     const selectedDateStr = formatDateToYYYYMMDD(selectedDate)
@@ -52,19 +53,16 @@ const TimeContainer: React.FC<TimeCardProps> = ({ todos, selectedDate }) => {
     console.log('[TimeCard] All todos:', todos)
     
     const filtered = todos.filter(todo => {
-      // Must have TIME schedule type with start and end times
       if (todo.scheduleType !== ScheduleType.TIME || !todo.startTime || !todo.endTime) {
         return false
       }
 
-      // Check if scheduledDate matches selected date
       if (todo.scheduledDate) {
         const matches = todo.scheduledDate === selectedDateStr
         console.log(`[TimeCard] "${todo.title}" scheduledDate=${todo.scheduledDate}, selected=${selectedDateStr}, matches=${matches}`)
         return matches
       }
 
-      // Fallback: if no scheduledDate, check if startTime date matches
       const startTimeDate = new Date(todo.startTime)
       const startDateStr = formatDateToYYYYMMDD(startTimeDate)
       console.log(`[TimeCard] "${todo.title}" startTime date=${startDateStr}, selected=${selectedDateStr}`)
@@ -78,7 +76,6 @@ const TimeContainer: React.FC<TimeCardProps> = ({ todos, selectedDate }) => {
       const end = getMinutesSinceStart(todo.endTime!)
       const startMinute = start - DAY_START_MINUTES
       
-      // Handle end time that might be earlier than start (crossing midnight)
       let duration = end - start
       if (duration < 0) {
         duration = (24 * 60) - start + end
@@ -104,6 +101,7 @@ const TimeContainer: React.FC<TimeCardProps> = ({ todos, selectedDate }) => {
         startHour: convertMinutesToHour(startMinute),
         durationMinutes: Math.max(duration, 15),
         active: !todo.completed,
+        originalTodo: todo, // Keep reference to original todo
       }
     })
     
@@ -121,22 +119,45 @@ const TimeContainer: React.FC<TimeCardProps> = ({ todos, selectedDate }) => {
   }, [todos, selectedDate])
 
   const handlePositionChange = (taskId: string, newStartHour: number) => {
-    // Convert hour back to total minutes since midnight
+    // Find the original todo to get duration
+    const task = timedTodos.find(t => t.id === taskId)
+    if (!task) return
+
+    const { originalTodo } = task
+    const duration = task.durationMinutes
+
+    // Calculate new start time in minutes since midnight
     const newStartMinutes = newStartHour * 60
-    const hours = Math.floor(newStartMinutes / 60) % 24
-    const minutes = newStartMinutes % 60
-    
-    console.log('[TimeContainer] Task position changed:', {
+    const newEndMinutes = newStartMinutes + duration
+
+    // Create ISO date strings for the selected date
+    const dateStr = formatDateToYYYYMMDD(selectedDate)
+    const [year, month, day] = dateStr.split('-').map(Number)
+
+    const startHours = Math.floor(newStartMinutes / 60) % 24
+    const startMins = newStartMinutes % 60
+    const endHours = Math.floor(newEndMinutes / 60) % 24
+    const endMins = newEndMinutes % 60
+
+    const newStartTime = new Date(year, month - 1, day, startHours, startMins).toISOString()
+    const newEndTime = new Date(year, month - 1, day, endHours, endMins).toISOString()
+
+    console.log('[TimeContainer] Updating todo:', {
       taskId,
       newStartHour,
-      newStartMinutes,
-      newTime: `${hours}:${String(minutes).padStart(2, '0')}`,
-      formattedTime: `${hours > 12 ? hours - 12 : hours}:${String(minutes).padStart(2, '0')} ${hours >= 12 ? 'PM' : 'AM'}`,
+      newStartTime,
+      newEndTime,
+      duration,
     })
-    
-    // TODO: Update the todo with new start/end times
-    // You'll want to call your update function here
-    // Example: updateTodo(taskId, { startTime: newStartTime, endTime: newEndTime })
+
+    // Call the mutation
+    updateTodoMutation.mutate({
+      id: taskId,
+      updates: {
+        startTime: newStartTime,
+        endTime: newEndTime,
+      },
+    })
   }
 
   return (
