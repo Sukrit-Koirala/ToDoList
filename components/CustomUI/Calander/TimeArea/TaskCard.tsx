@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View, PanResponder, Animated } from 'react-native'
-import React, { useRef } from 'react'
+import { StyleSheet, Text, View } from 'react-native'
+import React from 'react'
 import RoundedRectangle from '../RoundedRectangle/RoundedRectangle'
 import { Ionicons } from '@expo/vector-icons'
 import { getTaskIcon } from '../utils/taskIcons'
@@ -12,7 +12,8 @@ interface TaskCardProps {
   startMinute?: number
   durationMinutes?: number
   active?: boolean
-  onPositionChange: (newStartHour: number) => void
+  offsetY?: number
+  isSelected?: boolean
 }
 
 /* ---------- Constants ---------- */
@@ -64,7 +65,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
   startMinute = 0,
   durationMinutes = 60,
   active = false,
-  onPositionChange,
+  offsetY = 0,
+  isSelected = false,
 }) => {
   const variant = getVariant(durationMinutes)
   const config = VARIANT_CONFIG[variant]
@@ -75,70 +77,21 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
   const iconName = getTaskIcon(title)
 
-  /* ----- Drag Logic ----- */
-  const pan = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current
-  const offsetY = useRef(0)
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        pan.setOffset({
-          x: 0,
-          y: offsetY.current,
-        })
-        pan.setValue({ x: 0, y: 0 })
-      },
-      onPanResponderMove: Animated.event(
-        [null, { dx: pan.x, dy: pan.y }],
-        { useNativeDriver: false }
-      ),
-      onPanResponderRelease: (_, gesture) => {
-        // Calculate total displacement
-        const totalY = offsetY.current + gesture.dy
-
-        // Snap to nearest hour slot
-        const newStartHour = Math.max(0, Math.round((initialTop + totalY) / SLOT_HEIGHT))
-        const snappedY = newStartHour * SLOT_HEIGHT - initialTop
-
-        // Update offset ref
-        offsetY.current = snappedY
-
-        // Reset pan and animate to snapped position
-        pan.flattenOffset()
-        Animated.spring(pan, {
-          toValue: { x: 0, y: snappedY },
-          useNativeDriver: false,
-        }).start(() => {
-          offsetY.current = snappedY
-          pan.setValue({ x: 0, y: 0 })
-        })
-
-        // Notify parent of time change
-        if (onPositionChange) {
-          onPositionChange(newStartHour)
-        }
-      },
-    })
-  ).current
-
   return (
-    <Animated.View
+    <View
       style={[
         styles.cardWrapper,
         {
-          top: initialTop,
+          top: initialTop + offsetY,
           height: cardHeight,
-          transform: [
-            { translateX: pan.x },
-            { translateY: pan.y },
-          ],
         },
       ]}
-      {...panResponder.panHandlers}
     >
-      <View style={[styles.shadowWrapper, active && styles.activeShadow]}>
+      <View style={[
+        styles.shadowWrapper, 
+        (active || isSelected) && styles.activeShadow,
+        isSelected && styles.selectedBorder
+      ]}>
         <RoundedRectangle
           radius={config.cardRoundness}
           backgroundColor="#ffffff"
@@ -153,6 +106,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   height: config.iconBox,
                   borderRadius: config.rectBorder,
                 },
+                isSelected && styles.selectedIcon
               ]}
             >
               <Ionicons
@@ -185,7 +139,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           </View>
         </RoundedRectangle>
       </View>
-    </Animated.View>
+    </View>
   )
 }
 
@@ -221,12 +175,21 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
 
+  selectedBorder: {
+    borderWidth: 2,
+    borderColor: '#3b82f6',
+  },
+
   iconContainer: {
     marginLeft: 8,
     marginRight: 12,
     backgroundColor: '#101010',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+
+  selectedIcon: {
+    backgroundColor: '#3b82f6',
   },
 
   textContainer: {

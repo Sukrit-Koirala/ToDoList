@@ -1,13 +1,13 @@
 import { StyleSheet, Text, View, ActivityIndicator, Animated } from 'react-native'
 import React, { useMemo, useState, useRef, useEffect } from 'react'
-import TimeCard from './TimeArea'
+import TimeCard from './TimeArea/TimeArea'
 import { LinearGradient } from 'expo-linear-gradient'
 import CalendarHeader from './Header/CalanderHeader'
 import CalendarFAB from './Header/FAB_Calander'
 import { useTheme } from '../../../hooks/useTheme'
 import { useQuery } from '@tanstack/react-query'
 import { getTodosByDate } from '../../../api/todos'
-import TimeContainer from './TimeArea'
+import TimeContainer from './TimeArea/TimeArea'
 
 const CalendarPage = () => {
   const { theme } = useTheme()
