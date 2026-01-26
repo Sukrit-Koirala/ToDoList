@@ -9,9 +9,11 @@ export const styles = StyleSheet.create({
   body: {
     paddingVertical: 32,
     position: 'relative',
+
   },
   card: {
     marginRight: 8,
+    
   },
   tasksContainer: {
     position: 'absolute',

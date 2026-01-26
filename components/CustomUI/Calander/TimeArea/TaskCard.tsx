@@ -8,8 +8,7 @@ import { getTaskIcon } from '../../utils/taskIcons'
 interface TaskCardProps {
   title: string
   description?: string
-  startHour: number
-  startMinute?: number
+  startMinute: number // <-- use relativeMinute from hook
   durationMinutes?: number
   active?: boolean
   offsetY?: number
@@ -61,8 +60,7 @@ const getVariant = (duration: number) => {
 const TaskCard: React.FC<TaskCardProps> = ({
   title,
   description,
-  startHour,
-  startMinute = 0,
+  startMinute,
   durationMinutes = 60,
   active = false,
   offsetY = 0,
@@ -72,7 +70,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const config = VARIANT_CONFIG[variant]
 
   /* ----- Positioning ----- */
-  const initialTop = ((startHour * 60 + startMinute) / 60) * SLOT_HEIGHT
+  const initialTop = startMinute // use relativeMinute directly
   const cardHeight = (durationMinutes / 60) * SLOT_HEIGHT
 
   const iconName = getTaskIcon(title)
@@ -87,15 +85,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
         },
       ]}
     >
-      <View style={[
-        styles.shadowWrapper, 
-        (active || isSelected) && styles.activeShadow,
-        isSelected && styles.selectedBorder
-      ]}>
-        <RoundedRectangle
-          radius={config.cardRoundness}
-          backgroundColor="#ffffff"
-        >
+      <View
+        style={[
+          styles.shadowWrapper,
+          (active || isSelected) && styles.activeShadow,
+          isSelected && styles.selectedBorder,
+        ]}
+      >
+        <RoundedRectangle radius={config.cardRoundness} backgroundColor="#ffffff">
           <View style={styles.row}>
             {/* Icon */}
             <View
@@ -106,27 +103,15 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   height: config.iconBox,
                   borderRadius: config.rectBorder,
                 },
-                isSelected && styles.selectedIcon
+                isSelected && styles.selectedIcon,
               ]}
             >
-              <Ionicons
-                name={iconName}
-                size={config.iconSize}
-                color="#ffffff"
-              />
+              <Ionicons name={iconName} size={config.iconSize} color="#ffffff" />
             </View>
 
             {/* Text */}
-            <View
-              style={[
-                styles.textContainer,
-                { paddingLeft: config.paddingLeft },
-              ]}
-            >
-              <Text
-                style={[styles.title, { fontSize: config.titleSize }]}
-                numberOfLines={1}
-              >
+            <View style={[styles.textContainer, { paddingLeft: config.paddingLeft }]}>
+              <Text style={[styles.title, { fontSize: config.titleSize }]} numberOfLines={1}>
                 {title}
               </Text>
 
@@ -166,12 +151,10 @@ const styles = StyleSheet.create({
   },
 
   activeShadow: {
-    // iOS
     shadowColor: '#101010',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
     shadowRadius: 10,
-    // Android
     elevation: 10,
   },
 

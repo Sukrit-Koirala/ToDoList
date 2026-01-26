@@ -1,72 +1,106 @@
-import { useMemo, useRef, useCallback } from 'react'
-import { ScrollView } from 'react-native'
-import { Todo, ScheduleType } from '../../../../types/todos'
-import { 
-  DAY_START_MINUTES,
-  getMinutesSinceStart,
-  convertMinutesToHour,
-  formatDateToYYYYMMDD
-} from './helpers'
+import { useMemo, useRef, useState, useCallback } from 'react'
+import {
+  ScrollView,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+} from 'react-native'
+import { Todo } from '../../../../types/todos'
+import {
+  calculateWindowStartMinute,
+  buildTimedTodos,
+  buildVisibleHours,
+  filterVisibleTodos,
+  HOURS_TO_SHOW,
+} from './timeContainer.logic'
 
-interface TimedTodo {
-  id: string
-  title: string
-  description?: string
-  startMinute: number
-  startHour: number
-  durationMinutes: number
-  active: boolean
-  originalTodo: Todo
-}
+const HOUR_HEIGHT = 80
+const BUFFER_HOURS = 4
+const BUFFER_HEIGHT = BUFFER_HOURS * HOUR_HEIGHT
+const MIDDLE_POSITION = BUFFER_HEIGHT
 
-export const useTimeContainerLogic = (todos: Todo[], selectedDate: Date) => {
+export const useTimeContainerLogic = (
+  todos: Todo[],
+  selectedDate: Date
+) => {
   const scrollViewRef = useRef<ScrollView>(null)
+  const lastScrollY = useRef(MIDDLE_POSITION)
+  const isResetting = useRef(false)
+  const accumulatedOffset = useRef(0)
 
-  // Process todos into timed tasks
-  const timedTodos = useMemo(() => {
-    const selectedDateStr = formatDateToYYYYMMDD(selectedDate)
-    
-    const filtered = todos.filter(todo => {
-      if (todo.scheduleType !== ScheduleType.TIME || !todo.startTime || !todo.endTime) {
-        return false
-      }
+  const currentHour = new Date().getHours()
+  const [hourOffset, setHourOffset] = useState(currentHour)
 
-      if (todo.scheduledDate) {
-        return todo.scheduledDate === selectedDateStr
-      }
+  const windowStartMinute = useMemo(
+    () => calculateWindowStartMinute(hourOffset),
+    [hourOffset]
+  )
 
-      const startTimeDate = new Date(todo.startTime)
-      const startDateStr = formatDateToYYYYMMDD(startTimeDate)
-      return startDateStr === selectedDateStr
-    })
-    
-    const mapped: TimedTodo[] = filtered.map(todo => {
-      const start = getMinutesSinceStart(todo.startTime!)
-      const end = getMinutesSinceStart(todo.endTime!)
-      const startMinute = start - DAY_START_MINUTES
+  const timedTodos = useMemo(
+    () => buildTimedTodos(todos, selectedDate),
+    [todos, selectedDate]
+  )
+
+  const visibleHours = useMemo(
+    () => {
+      const hours = buildVisibleHours(windowStartMinute)
+      console.log('📅 Visible Hours:', hours.map(h => h.label).join(', '))
+      return hours
+    },
+    [windowStartMinute]
+  )
+
+  const visibleTodos = useMemo(
+    () => filterVisibleTodos(timedTodos, windowStartMinute),
+    [timedTodos, windowStartMinute]
+  )
+
+  const onScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (isResetting.current) return
+
+      const scrollY = e.nativeEvent.contentOffset.y
+      const deltaY = scrollY - lastScrollY.current
       
-      let duration = end - start
-      if (duration < 0) {
-        duration = (24 * 60) - start + end
-      }
+      accumulatedOffset.current += deltaY
 
-      return {
-        id: todo.id,
-        title: todo.title,
-        description: todo.description,
-        startMinute,
-        startHour: convertMinutesToHour(startMinute),
-        durationMinutes: Math.max(duration, 15),
-        active: !todo.completed,
-        originalTodo: todo,
+      const absAccumulated = Math.abs(accumulatedOffset.current)
+      const hoursScrolled = Math.floor(absAccumulated / HOUR_HEIGHT)
+      
+      if (hoursScrolled > 0) {
+        const direction = accumulatedOffset.current > 0 ? 1 : -1
+        
+        isResetting.current = true
+        
+        const remainingOffset = accumulatedOffset.current % HOUR_HEIGHT
+        
+        setHourOffset(prev => {
+          const newOffset = (prev + (hoursScrolled * direction) + 24) % 24
+          console.log(`Hour offset: ${prev} → ${newOffset}`)
+          return newOffset
+        })
+        
+        setTimeout(() => {
+          scrollViewRef.current?.scrollTo({ 
+            y: MIDDLE_POSITION + remainingOffset, 
+            animated: false 
+          })
+          lastScrollY.current = MIDDLE_POSITION + remainingOffset
+          accumulatedOffset.current = remainingOffset
+          isResetting.current = false
+        }, 0)
+      } else {
+        lastScrollY.current = scrollY
       }
-    })
-    
-    return mapped.filter(task => task.startMinute >= 0)
-  }, [todos, selectedDate])
+    },
+    []
+  )
 
   return {
     scrollViewRef,
-    timedTodos,
+    visibleHours,
+    visibleTodos,
+    onScroll,
+    hourOffset,
+    windowStartMinute,
   }
 }

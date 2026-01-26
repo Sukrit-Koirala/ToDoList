@@ -1,11 +1,9 @@
 import { View, ScrollView } from 'react-native'
-import React from 'react'
+import React, { useEffect } from 'react'
 import RoundedRectangle from '../../RoundedRectangle/RoundedRectangle'
 import TimeSlot from './TimeSlot'
-import TaskCard from './TaskCard'
 import { useTheme } from '../../../../hooks/useTheme'
 import { Todo } from '../../../../types/todos'
-import { HOURS } from './helpers'
 import { styles } from './TimeAreaStyle.styles'
 import { useTimeContainerLogic } from './useTimeContainerLogic'
 
@@ -14,41 +12,62 @@ interface TimeCardProps {
   selectedDate: Date
 }
 
-/* ---------- Component ---------- */
+const HOUR_HEIGHT = 80
+const BUFFER_HOURS = 4
+const BUFFER_HEIGHT = BUFFER_HOURS * HOUR_HEIGHT
+const MIDDLE_POSITION = BUFFER_HEIGHT
 
-const TimeContainer: React.FC<TimeCardProps> = ({ todos, selectedDate }) => {
+const TimeContainer: React.FC<TimeCardProps> = ({
+  todos,
+  selectedDate,
+}) => {
   const { theme } = useTheme()
-  const { scrollViewRef, timedTodos } = useTimeContainerLogic(todos, selectedDate)
+
+  const {
+    scrollViewRef,
+    visibleHours,
+    visibleTodos,
+    onScroll,
+    windowStartMinute,
+  } = useTimeContainerLogic(todos, selectedDate)
+
+  useEffect(() => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({ 
+        y: MIDDLE_POSITION, 
+        animated: false 
+      })
+    }, 100)
+  }, [])
 
   return (
-    <ScrollView 
+    <ScrollView
       ref={scrollViewRef}
       style={styles.scrollContainer}
+      onScroll={onScroll}
+      scrollEventThrottle={8}
+      showsVerticalScrollIndicator={false}
+      bounces={false}
     >
       <RoundedRectangle
         radius={20}
         style={[
           styles.card,
-          { backgroundColor: theme.calendarThemes.calendarBackground }
+          { backgroundColor: theme.calendarThemes.calendarBackground },
         ]}
       >
         <View style={styles.body}>
-          {HOURS.map((hour, index) => (
-            <TimeSlot key={`${hour}-${index}`} label={hour} />
+          <View style={{ height: BUFFER_HEIGHT }} />
+          
+          {visibleHours.map(hour => (
+            <TimeSlot
+              key={hour.key}
+              label={hour.label}
+              height={HOUR_HEIGHT}
+            />
           ))}
-
-          <View style={styles.tasksContainer}>
-            {timedTodos.map(task => (
-              <TaskCard
-                key={task.id}
-                startHour={task.startHour}
-                title={task.title}
-                description={task.description}
-                durationMinutes={task.durationMinutes}
-                active={task.active}
-              />
-            ))}
-          </View>
+          
+          <View style={{ height: BUFFER_HEIGHT }} />
         </View>
       </RoundedRectangle>
     </ScrollView>
