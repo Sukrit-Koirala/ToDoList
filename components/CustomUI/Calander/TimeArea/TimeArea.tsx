@@ -12,8 +12,6 @@ interface TimeCardProps {
 
 const PIXELS_PER_HOUR = 80
 const SENSITIVITY = 1
-const MIN_HOUR_OFFSET = -24 // Allow scrolling 1 day back
-const MAX_HOUR_OFFSET = 48  // Allow scrolling 2 days forward
 
 const TimeContainer: React.FC<TimeCardProps> = ({ selectedDate }) => {
   const { theme } = useTheme()
@@ -43,12 +41,7 @@ const TimeContainer: React.FC<TimeCardProps> = ({ selectedDate }) => {
         )
 
         if (hoursDelta !== 0) {
-          // FIX: Added boundary checking
-          setHourOffset(prev => {
-            const newOffset = prev - hoursDelta
-            return Math.max(MIN_HOUR_OFFSET, Math.min(MAX_HOUR_OFFSET, newOffset))
-          })
-
+          setHourOffset(prev => prev - hoursDelta)
           scrollOffset.current -= hoursDelta * PIXELS_PER_HOUR
         }
       },
