@@ -1,7 +1,7 @@
+// TimeContainer.tsx
 import React, { useRef } from 'react'
-import { View, PanResponder } from 'react-native'
+import { View, PanResponder, Animated } from 'react-native'
 import RoundedRectangle from '../../RoundedRectangle/RoundedRectangle'
-import TimeSlot from './TimeSlot'
 import { useTheme } from '../../../../hooks/useTheme'
 import { styles } from './TimeAreaStyle.styles'
 import { useTimeContainerLogic } from './useTimeContainerLogic'
@@ -20,13 +20,14 @@ const TimeContainer: React.FC<TimeCardProps> = ({ selectedDate }) => {
 
   const lastY = useRef(0)
   const scrollOffset = useRef(0)
+  const animatedY = useRef(new Animated.Value(0)).current
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
 
       onPanResponderGrant: (_, g) => {
-        lastY.current = g.y0 // Use y0 (initial touch position) instead of moveY
+        lastY.current = g.y0
         scrollOffset.current = 0
       },
 
@@ -35,6 +36,9 @@ const TimeContainer: React.FC<TimeCardProps> = ({ selectedDate }) => {
         lastY.current = g.moveY
 
         scrollOffset.current += dy * SENSITIVITY
+        
+        // Update animated value for visual feedback
+        animatedY.setValue(scrollOffset.current)
 
         const hoursDelta = Math.trunc(
           scrollOffset.current / PIXELS_PER_HOUR
@@ -43,11 +47,18 @@ const TimeContainer: React.FC<TimeCardProps> = ({ selectedDate }) => {
         if (hoursDelta !== 0) {
           setHourOffset(prev => prev - hoursDelta)
           scrollOffset.current -= hoursDelta * PIXELS_PER_HOUR
+          animatedY.setValue(scrollOffset.current)
         }
       },
 
       onPanResponderRelease: () => {
         console.log('✋ Gesture END')
+        // Snap back to zero
+        Animated.spring(animatedY, {
+          toValue: 0,
+          useNativeDriver: true,
+        }).start()
+        scrollOffset.current = 0
       },
     })
   ).current
@@ -61,15 +72,25 @@ const TimeContainer: React.FC<TimeCardProps> = ({ selectedDate }) => {
           { backgroundColor: theme.calendarThemes.calendarBackground },
         ]}
       >
-        <View style={styles.body}>
-          {visibleHours.map(hour => (
-            <TimeSlot
-              key={hour.key}
-              label={hour.label}
-              height={PIXELS_PER_HOUR}
-            />
-          ))}
-        </View>
+        <Animated.View 
+          style={[
+            styles.body,
+            {
+              transform: [{ translateY: animatedY }]
+            }
+          ]}
+        >
+          {visibleHours.map(hour => {
+            const { Component, key, label } = hour
+            return (
+              <Component
+                key={key}
+                label={label}
+                height={PIXELS_PER_HOUR}
+              />
+            )
+          })}
+        </Animated.View>
       </RoundedRectangle>
     </View>
   )
