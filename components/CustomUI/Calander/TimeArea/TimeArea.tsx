@@ -1,76 +1,55 @@
-import { View, ScrollView } from 'react-native'
-import React, { useEffect } from 'react'
+import React, { useRef } from 'react'
+import { View, PanResponder } from 'react-native'
 import RoundedRectangle from '../../RoundedRectangle/RoundedRectangle'
 import TimeSlot from './TimeSlot'
 import { useTheme } from '../../../../hooks/useTheme'
-import { Todo } from '../../../../types/todos'
 import { styles } from './TimeAreaStyle.styles'
 import { useTimeContainerLogic } from './useTimeContainerLogic'
 
 interface TimeCardProps {
-  todos: Todo[]
   selectedDate: Date
 }
 
-const HOUR_HEIGHT = 80
-const BUFFER_HOURS = 4
-const BUFFER_HEIGHT = BUFFER_HOURS * HOUR_HEIGHT
-const MIDDLE_POSITION = BUFFER_HEIGHT
-
-const TimeContainer: React.FC<TimeCardProps> = ({
-  todos,
-  selectedDate,
-}) => {
+const TimeContainer: React.FC<TimeCardProps> = ({ selectedDate }) => {
   const { theme } = useTheme()
+  const { visibleHours } = useTimeContainerLogic(selectedDate)
 
-  const {
-    scrollViewRef,
-    visibleHours,
-    visibleTodos,
-    onScroll,
-    windowStartMinute,
-  } = useTimeContainerLogic(todos, selectedDate)
+const startY = useRef(0)
 
-  useEffect(() => {
-    setTimeout(() => {
-      scrollViewRef.current?.scrollTo({ 
-        y: MIDDLE_POSITION, 
-        animated: false 
-      })
-    }, 100)
-  }, [])
+const panResponder = useRef(
+  PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => false, // ignore moves
+
+    onPanResponderGrant: (_, gestureState) => {
+      // record the starting Y
+      startY.current = gestureState.y0
+      console.log('📌 Touch started at:', startY.current)
+    },
+
+    onPanResponderRelease: (_, gestureState) => {
+      // total drag distance
+      const totalScroll = gestureState.moveY - startY.current
+      console.log('✋ Touch ended / held. Total scroll:', totalScroll, 'pixels')
+    },
+  })
+).current
+
+
 
   return (
-    <ScrollView
-      ref={scrollViewRef}
-      style={styles.scrollContainer}
-      onScroll={onScroll}
-      scrollEventThrottle={8}
-      showsVerticalScrollIndicator={false}
-      bounces={false}
-    >
+    <View style={styles.scrollContainer} {...panResponder.panHandlers}>
       <RoundedRectangle
         radius={20}
-        style={[
-          styles.card,
-          { backgroundColor: theme.calendarThemes.calendarBackground },
-        ]}
+        style={[styles.card, { backgroundColor: theme.calendarThemes.calendarBackground }]}
       >
         <View style={styles.body}>
-          <View style={{ height: BUFFER_HEIGHT }} />
-          
-          {visibleHours.map(hour => (
-            <TimeSlot
-              key={hour.key}
-              label={hour.label}
-              height={HOUR_HEIGHT}
-            />
+          {visibleHours.map((hour, index) => (
+            <TimeSlot key={index} label={hour.label} height={80} />
           ))}
-          
-          <View style={{ height: BUFFER_HEIGHT }} />
         </View>
       </RoundedRectangle>
-    </ScrollView>
+    </View>
   )
 }
 
