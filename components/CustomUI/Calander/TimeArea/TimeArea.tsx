@@ -10,42 +10,71 @@ interface TimeCardProps {
   selectedDate: Date
 }
 
+const PIXELS_PER_HOUR = 80
+const SENSITIVITY = 1
+const MIN_HOUR_OFFSET = -24 // Allow scrolling 1 day back
+const MAX_HOUR_OFFSET = 48  // Allow scrolling 2 days forward
+
 const TimeContainer: React.FC<TimeCardProps> = ({ selectedDate }) => {
   const { theme } = useTheme()
-  const { visibleHours } = useTimeContainerLogic(selectedDate)
+  const { visibleHours, hourOffset, setHourOffset } =
+    useTimeContainerLogic(selectedDate)
 
-const startY = useRef(0)
+  const lastY = useRef(0)
+  const scrollOffset = useRef(0)
 
-const panResponder = useRef(
-  PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => false, // ignore moves
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
 
-    onPanResponderGrant: (_, gestureState) => {
-      // record the starting Y
-      startY.current = gestureState.y0
-      console.log('📌 Touch started at:', startY.current)
-    },
+      onPanResponderGrant: (_, g) => {
+        lastY.current = g.y0 // Use y0 (initial touch position) instead of moveY
+        scrollOffset.current = 0
+      },
 
-    onPanResponderRelease: (_, gestureState) => {
-      // total drag distance
-      const totalScroll = gestureState.moveY - startY.current
-      console.log('✋ Touch ended / held. Total scroll:', totalScroll, 'pixels')
-    },
-  })
-).current
+      onPanResponderMove: (_, g) => {
+        const dy = g.moveY - lastY.current
+        lastY.current = g.moveY
 
+        scrollOffset.current += dy * SENSITIVITY
 
+        const hoursDelta = Math.trunc(
+          scrollOffset.current / PIXELS_PER_HOUR
+        )
+
+        if (hoursDelta !== 0) {
+          // FIX: Added boundary checking
+          setHourOffset(prev => {
+            const newOffset = prev - hoursDelta
+            return Math.max(MIN_HOUR_OFFSET, Math.min(MAX_HOUR_OFFSET, newOffset))
+          })
+
+          scrollOffset.current -= hoursDelta * PIXELS_PER_HOUR
+        }
+      },
+
+      onPanResponderRelease: () => {
+        console.log('✋ Gesture END')
+      },
+    })
+  ).current
 
   return (
     <View style={styles.scrollContainer} {...panResponder.panHandlers}>
       <RoundedRectangle
         radius={20}
-        style={[styles.card, { backgroundColor: theme.calendarThemes.calendarBackground }]}
+        style={[
+          styles.card,
+          { backgroundColor: theme.calendarThemes.calendarBackground },
+        ]}
       >
         <View style={styles.body}>
-          {visibleHours.map((hour, index) => (
-            <TimeSlot key={index} label={hour.label} height={80} />
+          {visibleHours.map(hour => (
+            <TimeSlot
+              key={hour.key}
+              label={hour.label}
+              height={PIXELS_PER_HOUR}
+            />
           ))}
         </View>
       </RoundedRectangle>

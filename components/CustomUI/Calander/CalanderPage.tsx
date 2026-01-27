@@ -92,7 +92,7 @@ const { data: todos = [], isLoading } = useQuery({
       </Animated.View>
 
     <View style={styles.timeBlockContainer}>
-      <TimeContainer todos={todos} selectedDate={selectedDate} />
+      <TimeContainer  selectedDate={selectedDate} />
     </View>
     </LinearGradient>
   )

@@ -1,11 +1,27 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { buildVisibleHours } from './timeContainer.logic'
 
 export const useTimeContainerLogic = (selectedDate: Date) => {
-  const currentHour = new Date().getHours()
-  const [hourOffset, setHourOffset] = useState(currentHour)
+  const [hourOffset, setHourOffset] = useState(() => {
+    const h = new Date(selectedDate).getHours()
+    console.log('🟢 INIT hourOffset from date:', h)
+    return h
+  })
 
-  const visibleHours = useMemo(() => buildVisibleHours(hourOffset), [hourOffset])
+  useEffect(() => {
+    const h = new Date(selectedDate).getHours()
+    console.log('📅 selectedDate changed → reset hourOffset to:', h)
+    setHourOffset(h)
+  }, [selectedDate])
 
-  return { visibleHours, hourOffset }
+  const visibleHours = useMemo(() => {
+    console.log('🔁 buildVisibleHours for hourOffset:', hourOffset)
+    return buildVisibleHours(hourOffset)
+  }, [hourOffset])
+
+  return {
+    visibleHours,
+    hourOffset,
+    setHourOffset,
+  }
 }
