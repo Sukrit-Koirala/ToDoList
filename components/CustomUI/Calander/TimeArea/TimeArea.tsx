@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { View, ScrollView } from 'react-native'
+import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import RoundedRectangle from '../../RoundedRectangle/RoundedRectangle'
 import TimeSlot from './TimeSlot'
-import TaskCard from './TaskCard'
+import DraggableTaskCard from './DraggableTaskCard'
 import { useTheme } from '../../../../hooks/useTheme'
 import { styles } from './TimeAreaStyle.styles'
-import { getTodosByDate, Todo } from '../../../../api/todos'
+import { getTodosByDate, Todo, scheduleTodoWithTime } from '../../../../api/todos'
 import { ScheduleType } from '../../../../types/todos'
 
 interface Props {
@@ -18,16 +19,18 @@ const HOURS = Array.from({ length: 24 }, (_, i) => i)
 const TimeContainer: React.FC<Props> = ({ selectedDate }) => {
   const { theme } = useTheme()
   const [todos, setTodos] = useState<Todo[]>([])
+  const scrollRef = useRef<ScrollView>(null)
+
+  const loadTodos = async () => {
+    const dateStr = selectedDate.toISOString().split('T')[0]
+    const allTodos = await getTodosByDate(dateStr)
+    const timeTodos = allTodos.filter(
+      todo => todo.scheduleType === ScheduleType.TIME && todo.startTime && todo.endTime
+    )
+    setTodos(timeTodos)
+  }
 
   useEffect(() => {
-    const loadTodos = async () => {
-      const dateStr = selectedDate.toISOString().split('T')[0]
-      const allTodos = await getTodosByDate(dateStr)
-      const timeTodos = allTodos.filter(
-        todo => todo.scheduleType === ScheduleType.TIME && todo.startTime && todo.endTime
-      )
-      setTodos(timeTodos)
-    }
     loadTodos()
   }, [selectedDate])
 
@@ -46,6 +49,22 @@ const TimeContainer: React.FC<Props> = ({ selectedDate }) => {
     return `${displayHour} ${isPM ? 'PM' : 'AM'}`
   }
 
+  const minutesToTimeString = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60) % 24
+    const mins = Math.floor(minutes % 60)
+    return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`
+  }
+
+  const handleTaskDrop = async (todoId: string, newStartMinutes: number, durationMinutes: number) => {
+    const dateStr = selectedDate.toISOString().split('T')[0]
+    const newStartTime = minutesToTimeString(newStartMinutes)
+    const newEndTime = minutesToTimeString(newStartMinutes + durationMinutes)
+    
+    // Just save it, don't reload
+    await scheduleTodoWithTime(todoId, newStartTime, newEndTime, dateStr)
+    // Data will refresh when user switches dates or reopens the view
+  }
+
   return (
     <View style={styles.scrollContainer}>
       <RoundedRectangle
@@ -55,7 +74,7 @@ const TimeContainer: React.FC<Props> = ({ selectedDate }) => {
           { backgroundColor: theme.calendarThemes.calendarBackground },
         ]}
       >
-        <ScrollView style={styles.body}>
+        <ScrollView ref={scrollRef} style={styles.body} scrollEnabled={true}>
           <View style={{ position: 'relative' }}>
             {/* HOURS */}
             <View>
@@ -84,13 +103,16 @@ const TimeContainer: React.FC<Props> = ({ selectedDate }) => {
                 const startMinute = (startMinutes / 60) * PIXELS_PER_HOUR
 
                 return (
-                  <TaskCard
+                  <DraggableTaskCard
                     key={todo.id}
+                    todoId={todo.id}
                     title={todo.title}
                     description={todo.description}
                     startMinute={startMinute}
                     durationMinutes={durationMinutes}
-                    offsetY={0}
+                    pixelsPerHour={PIXELS_PER_HOUR}
+                    onDrop={handleTaskDrop}
+                    scrollRef={scrollRef}
                   />
                 )
               })}
